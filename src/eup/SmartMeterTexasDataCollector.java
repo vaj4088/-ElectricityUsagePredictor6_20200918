@@ -165,13 +165,17 @@ SmartMeterTexasDataInterface
 //		"/BrowserScraping2/drivers/geckodriver") ;
 	System.setProperty(
 		"webdriver.gecko.driver", 
-		"/home/vaj4088/git/ElectricityUsagePredictor5/drivers/" +
-		"geckodriver") ;
+//		"/home/vaj4088/git/ElectricityUsagePredictor5/drivers/" +
+//		"geckodriver") ;
+		"/home/vaj4088/git/-ElectricityUsagePredictor6_20200918/" +
+		"drivers/geckodriver"
+		) ;
 	/*
 	 * /home/xxxxxx/git/ElectricityUsagePredictor5/drivers/geckodriver
 	 */
 	if (displayUseProxy)     useProxy(firefoxOptions) ;
-	if (!DEBUG_SHOW_BROWSER) firefoxOptions.setHeadless(true);	
+	if (!DEBUG_SHOW_BROWSER) firefoxOptions.setHeadless(true);
+	msg("Built " + this) ;
     }
     
     @Override
@@ -258,7 +262,7 @@ SmartMeterTexasDataInterface
 
     @Override
     public String toString() {
-	return new String(getClass().getName());
+	return new String(getClass().getName() + " for " + date + ".");
     }
 
     /**
