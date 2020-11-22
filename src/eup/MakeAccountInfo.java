@@ -479,7 +479,6 @@ public class MakeAccountInfo {
 		return this ;
 	    }
 
-	    @SuppressWarnings("synthetic-access")
 	    public AccountInfoItem build() {
 		return new AccountInfoItem(this) ;
 	    }

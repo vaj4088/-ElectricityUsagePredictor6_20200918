@@ -26,6 +26,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.text.JTextComponent;
 
 /**
@@ -337,7 +338,7 @@ public class FeedbackerImplementation implements Feedbacker {
 
     public static void main(String[] args) {
 	javax.swing.SwingUtilities.invokeLater(new Runnable() {
-	    @SuppressWarnings("finally")
+	    @SuppressWarnings({ "finally", "resource" })
 	    @Override
 	    public void run() {
 		final int where = Feedbacker.TO_GUI + Feedbacker.TO_FILE
@@ -347,7 +348,7 @@ public class FeedbackerImplementation implements Feedbacker {
 		frame.getContentPane().add(fb.getOperationsLog());
 		fb.log("Test Line 1", where);
 		fb.log("Test Line 2", where);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.pack();
 		frame.setVisible(true);
 		PrintStream out0 = System.out;

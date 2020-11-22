@@ -117,13 +117,11 @@ public static class Builder {
 	    meterReadingCurrent = usage ;  return this ;
 	}
 	
-	@SuppressWarnings("synthetic-access")
 	public Predictor build() {
 	    return new Predictor(this) ;
 	}
     }
     
-    @SuppressWarnings("synthetic-access")
     private Predictor(Builder builder) {
 	dateBillCurrent   = builder.dateBillCurrent ;
 	dateCurrent       = builder.dateCurrent ;

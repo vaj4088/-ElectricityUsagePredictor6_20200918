@@ -692,7 +692,7 @@ implements ActionListener {
 	    sb.append(predictor.getDateBillCurrent()) ;
 	    sb.append("\r\n") ; 
 	    sb.append("Current Bill Meter Reading: ") ;
-	    h = new Integer(predictor.getMeterReadingBillCurrent()) ;
+	    h = Integer.valueOf(predictor.getMeterReadingBillCurrent()) ;
 	    sb.append(h.intValue()) ;
 	    if (usedMostRecentBillReadingCache) {
 		sb.append(
@@ -722,7 +722,7 @@ implements ActionListener {
 			    nonbreakingSpace + 
 			    "Meter Reading: "
 		    ) ;
-	    h = new Integer(predictor.getMeterReadingCurrent()) ;
+	    h = Integer.valueOf(predictor.getMeterReadingCurrent()) ;
 	    sb.append(h.intValue()) ;
 	    if (usedCurrentDateReadingCache) {
 		sb.append(

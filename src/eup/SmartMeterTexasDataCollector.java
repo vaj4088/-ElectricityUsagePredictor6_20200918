@@ -7,7 +7,8 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.time.LocalDate;
-
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -19,6 +20,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Proxy;
@@ -74,7 +76,10 @@ SmartMeterTexasDataInterface
     private static final String TITLE = "Dashboard" ;
     private static final String NO_DATA = "No data available " +
 	    "for the date range you requested." ;
-    
+    private final static String EMPTY = "" ;
+    private static final DateTimeFormatter DATE_PATTERN = 
+	    DateTimeFormatter.ofPattern("MM'/'dd'/'yyyy") ;
+   
     WebDriver browser ;
     FirefoxOptions firefoxOptions = new FirefoxOptions() ;
 //    int tries = 1 ;
@@ -142,6 +147,15 @@ SmartMeterTexasDataInterface
      * No publicly-available no-argument constructor.
      */
     private SmartMeterTexasDataCollector() {
+	    /*
+	     * vvvv    To get rid of warnings. vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+	     */
+	msg(Integer.valueOf(progressDelta)) ;
+	msg(Integer.valueOf(progressLabel)) ;
+	msg(Integer.valueOf(progress)) ;
+	    /*
+	     * ^^^^    To get rid of warnings. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	     */
     }
 
     /**
@@ -152,7 +166,6 @@ SmartMeterTexasDataInterface
      * to instantiate a SmartMeterTexasDataCollector.
      * 
      */
-    @SuppressWarnings("synthetic-access")
     private SmartMeterTexasDataCollector(Builder builder) {
 	this.date = builder.date ;
 	this.progressStart = builder.progressStart ;
@@ -176,6 +189,7 @@ SmartMeterTexasDataInterface
 	if (displayUseProxy)     useProxy(firefoxOptions) ;
 	if (!DEBUG_SHOW_BROWSER) firefoxOptions.setHeadless(true);
 	msg("Built " + this) ;
+	(new AssertionError("Built SMTDC, dumping call stack...")).printStackTrace() ;
     }
     
     @Override
@@ -196,7 +210,8 @@ SmartMeterTexasDataInterface
 		    cp.setLayout(new BoxLayout(cp, BoxLayout.Y_AXIS));
 		    cp.add(fb1.getProgressBar());
 		    cp.add(fb1.getOperationsLog());
-		    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		    frame.setDefaultCloseOperation(
+			    WindowConstants.EXIT_ON_CLOSE);
 		    frame.pack();
 		    frame.setVisible(true);
 		    System.setOut(new PrintStream(new FeedbackerOutputStream(
@@ -243,7 +258,6 @@ SmartMeterTexasDataInterface
 	    return this ;
 	}
 	
-	@SuppressWarnings("synthetic-access")
 	public SmartMeterTexasDataCollector build() {
 	    return new SmartMeterTexasDataCollector(this) ;
 	}
@@ -436,28 +450,419 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	return browser ;
     }
     
-    private void getData(WebDriver wd) {
-	//	   private volatile LocalDate date ; // The date of this object.
-//	DateTimeFormatter dtf = 
-//		DateTimeFormatter.ofPattern("MM'/'dd'/'yyyy") ;
-//	String formattedDate = dtf.format(date) ;
-//	System.out.println() ;
-//	System.out.println("Formatted date is " + formattedDate + " .") ;
-//	System.out.println() ;
-//	System.out.println() ;
+    private void getDataHelper(WebDriver wd) {
 	if (dataAvailable(wd)) {
 	    getLatestEndMeterReadingAndUpdateCache(wd) ;
-//	    scrapeData(wd, formattedDate) ;
 	} else {
 	    System.out.println() ;
 	    System.out.println("Received " + NO_DATA) ;
 	    System.out.println() ;
 	    System.out.println() ;
 	}
-//	scrapeData(wd, "02/20/2020") ;
-//	scrapeData(wd, "02/21/2020") ;
-//	System.out.println() ;
     }
+
+
+    /**
+     * @param wd  
+     */
+    void getData2(WebDriver wd) {//    void getData(WebPage webPage) {
+	DateTimeFormatter dtf = 
+		DateTimeFormatter.ofPattern("MM'/'dd'/'yyyy") ;
+	String dateString ;
+	/*
+	 * Need to compare variable date of type LocalDate
+	 * with variable cachedDate of type LocalDate,
+	 * using cache lock cacheLock to synchronize.
+	 * 
+	 * If boolean variable cachedValuesValid is true
+	 * and the comparison is equal, then
+	 * get the cached meter reading from the long variable
+	 * cachedMeterReading.
+	 * 
+	 */
+	synchronized (cacheLock) {
+	    cachedValuesUsed  = false ;
+	    if (cachedValuesValid && 
+		    (date.isEqual(cachedDate) || date.isAfter(cachedDate))
+		    ) {
+		cachedValuesUsed = true ;
+		/*
+		 * If we got here, then fake the end reading
+		 * (making it the same as the start reading
+		 *  because further data is unavailable)
+		 * and get data for a prior day
+		 * (because there are suffixes to be handled
+		 *   so that logging out may be performed).
+		 */
+		synchronized (lock) {
+		    startRead = (int) cachedMeterReading;
+//		    endRead = startRead ;
+		    dataValid = true ;
+		    dateString = date.minusDays(3).format(dtf) ;
+		    if (/*date.WebDriver wdisAfter(cachedDate)*/true/* */) {
+			//
+			//
+			//  This next line is a MAJOR design decision
+			//  to change the date of this object to the cached
+			//  date despite this object having been created 
+			//  with a different date.
+			//
+			//
+			date = cachedDate ;
+			//
+			//
+			//
+			dateChanged = true ;
+		    }
+		}
+	    } else {
+		synchronized (lock) {
+		    dateString = date.format(dtf) ;
+		}
+	    }
+	    /*
+	     * vvvv    To get rid of a warning. vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+	     */
+	    msg(dateString) ;
+	    /*
+	     * ^^^^    To get rid of a warning. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	     */
+	}
+
+//	List<NameValuePair> nameValuePairs = new ArrayList<>();
+//	final String VIEWUSAGE = "viewUsage_" ; 	// The capital "U" is 
+	// significant !
+
+//	ArrayList<NameValuePair> al = Util.makeArrayList(
+//		getSomeFieldsInFirstFormSMT(webPage)) ;
+//	ListIterator<NameValuePair> lit = al.listIterator() ;
+//	while (lit.hasNext()) {
+//	    NameValuePair nvp = lit.next() ;
+//	    String name = nvp.getName() ;
+//	    if (name.startsWith(VIEWUSAGE)) {
+//		nvp.setValue(dateString);
+//		lit.set(nvp) ;
+//	    }
+//	}
+//	nameValuePairs.addAll(al) ;
+//	String pageURL = "https://www.smartmetertexas.com" + addressSuffix ;
+	//
+	// Get the client's current state.
+	//
+//	HttpState state = client.getState() ;
+	//
+	// Get the client's first cookie (cookie 0).
+	//
+//	Cookie cookie = state.getCookies()[0] ;
+	//
+	// Get the parameters of the cookie so that 
+	// we know what parameters to use.
+	//
+//	String domain = cookie.getDomain() ;
+//	String path   = cookie.getPath() ;
+//	Date expires  = cookie.getExpiryDate() ;
+//	boolean secure= cookie.getSecure() ;
+	//
+	// Create the new cookie and add it to the collection of cookies.
+	//
+//	Cookie newCookie = new Cookie(
+//		domain, 
+//		"IV_JCT", 
+//		"%2Ftexas",
+//		path,
+//		expires,
+//		secure
+//		) ;
+//	state.addCookie(newCookie) ; 
+	//
+	//  Update the client's state.
+	//
+//	client.setState(state) ;
+//	method.addRequestHeader("Accept", 
+//		"text/html,application/xhtml+xml,"+
+//		"application/xml;q=0.9,*/*;q=0.8") ;
+//	method.addRequestHeader("Accept-Language", "en-US,en;q=0.5") ;
+//	method.addRequestHeader("Referer", 
+//		"https://www.smartmetertexas.com/texas/wps/myportal") ;
+//	method.addRequestHeader("Connection", "keep-alive") ;
+//	method.addRequestHeader("Upgrade-Insecure-Requests", "1") ;
+//	method.removeRequestHeader("Content-Length") ;
+	//
+	// Initialized to account for the subtraction 
+	// that will be needed.
+	//
+//	int contentLengthAccumulator = -1 ;
+//	for (NameValuePair nvp : nameValuePairs) {
+//	    contentLengthAccumulator += nvp.getName().length() ;
+//	    contentLengthAccumulator += nvp.getValue().length() ;
+//	    contentLengthAccumulator += 2 ;  // For '&' and ';'
+//	}
+//	if (contentLengthAccumulator == -1) {
+//	    contentLengthAccumulator = 0 ;  // No length to body.
+//	}
+//	method.addRequestHeader(
+//		"Content-Length", 
+//		Integer.toString(contentLengthAccumulator)) ;
+	//
+	// <><><><><>  Get a web page  <><><><><><>
+	//
+//	WebPage wp = getPage(
+//		pageURL,nameValuePairs, null);
+	//
+	// Check that there really is data.
+	//
+
+	//
+	// First, check that the data was properly accessed.
+	//
+//	WPLocation resourceMissing = wp.indexOf(msgNoResource) ;
+//	if (!badLocation(resourceMissing)) {
+//	    StringBuilder sb = new StringBuilder("Resource is missing, "
+//		    + "fix the program and please try again later.") ;
+//	    if (null == fb) {
+//		System.out.println(sb);
+//	    } else {
+//		fb.log(sb,
+//			Feedbacker.TO_FILE + Feedbacker.TO_GUI + 
+//			Feedbacker.TO_OUT
+//			+ Feedbacker.FLUSH) ;
+//	    }
+//	    try {
+//		Thread.sleep(10000) ;
+//	    } catch (InterruptedException e) {
+//		e.printStackTrace();
+//		// Restore the interrupted status
+//		Thread.currentThread().interrupt();
+//	    }
+//	    System.exit(-26) ;
+//	}
+
+	//
+	// Second, check that the server is up.
+	//
+//	WPLocation serverDown = wp.indexOf(msgDown);
+//	if (!badLocation(serverDown)) {
+//	    synchronized(lock) {
+//		dataValid = false ;
+//	    }
+//	    StringBuilder sb = new StringBuilder(
+//		    "No predicting is possible now, "
+//			    + "please try again later.") ;
+//	    if (null == fb) {
+//		System.out.println(sb);
+//	    } else {
+//		fb.log(sb,
+//			Feedbacker.TO_FILE + Feedbacker.TO_GUI + 
+//			Feedbacker.TO_OUT
+//			+ Feedbacker.FLUSH) ;
+//	    }
+//	    try {
+//		Thread.sleep(10000) ;
+//	    } catch (InterruptedException e) {
+//		e.printStackTrace();
+//		// Restore the interrupted status
+//		Thread.currentThread().interrupt();
+//	    }
+//	    System.exit(-27) ;
+//	} else {
+	    /*
+	     * NOW : GET THE DATA !!!
+	     */
+//	    WPLocation wpData = wp.indexOf(fromStringStartRead) ;
+//	    if (displayGetDataPage) {
+//		if (badLocation(wpData)) {
+//		    StringBuilder sb = new StringBuilder() ;
+//		    for (String line : wp.getLines()) {
+//			sb.append(line) ;
+//		    }
+//		    System.out.println("=====     SHOW PAGE.     =====") ;
+//		    System.out.println(sb) ;
+//		    System.out.println("=====     SHOWED PAGE.     =====") ;
+//		}
+//	    }
+//	    if (displayGetDataParameters) {
+//		System.out.println(
+//			"=====     SHOW PARAMETERS.     =====") ;
+//		System.out.println("URL:") ;
+//		System.out.println(pageURL) ;
+//		System.out.println("NAMEVALUEPAIRS:") ;
+//		for (NameValuePair nvp : nameValuePairs) {
+//		    System.out.println(nvp) ;
+//		}
+//		System.out.println("REQUEST HEADERS2:") ;
+//		for (Header h : method.getRequestHeaders()) {
+//		    System.out.println(h) ;
+//		}
+//		System.out.println(
+//			"=====     SHOWED PARAMETERS.     =====") ;
+//	    }
+	
+	/* ***************************************************************
+	 * Get a floating-point value that is the start reading value.
+	 */
+	float startReadFloat /* */ = 0 /* */ ;
+//	    assertGoodLocation(wpData) ;
+//	    String dataString = wp.subString(wpData, 
+//		    fromStringStartRead, 
+//		    toStringStartRead) ;
+//	    float startReadFloat = Float.parseFloat(dataString) ;
+	/*
+	 * *************************************************************** 
+	 */
+
+//	    wpData = wp.indexOf(fromStringEndRead) ;
+//	    dataString = wp.subString(wpData, 
+//		    fromStringEndRead, 
+//		    toStringEndRead) ;
+//	    float endReadFloat = Float.parseFloat(dataString) ;
+	    synchronized (cacheLock) {
+		if (!cachedValuesUsed) {
+		    synchronized (lock) {
+			startRead = (int) startReadFloat;
+//			endRead = (int) endReadFloat;
+			dataValid = true;
+		    }
+		}
+	    }
+//	}
+	/*
+	 * NOW : GET THE NEW addressSuffix !!!
+	 */
+//	addressSuffix = extractAddressFromGetData(wp);
+
+    }
+
+
+    /**
+     * @param wd  
+     */
+    void getData(WebDriver wd) {
+	getDataHelper(wd) ;
+	/*
+	 * 1 (deleted)
+	 * 2 Check if the cache can be used (synchronized on cachelock).
+	 * 3 Get the startRead, set dataValid to show data is valid,
+	 *   use the cached date as the date of this object and show
+	 *   that the date has been changed (synchronized on lock).
+	 * 4 Get the web page data for the start reading (as a float).
+	 * 5 If the cached values were not used (test synchronized on
+	 *   lock), then
+	 *   convert the start reading float to the int startRead
+	 *   and set dataValid to show data is valid (synchronized on
+	 *   lock).
+	 */
+	/*
+	 * getStartReadvalueForDate(WebDriver browser, String date)
+	 */
+	String dateString ;
+	    /*
+	     * vvvv    To get rid of a warning. vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+	     */
+	dateString = "" ;
+	msg(dateString) ;
+	    /*
+	     * ^^^^    To get rid of a warning. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	     */
+	/*
+	 * Need to compare variable date of type LocalDate
+	 * with variable cachedDate of type LocalDate,
+	 * using cache lock cacheLock to synchronize.
+	 * 
+	 * If boolean variable cachedValuesValid is true
+	 * and the comparison is equal, then
+	 * get the cached meter reading from the long variable
+	 * cachedMeterReading.
+	 * 
+	 */
+	synchronized (cacheLock) {
+	    cachedValuesUsed  = false ;
+	    if (cachedValuesValid && 
+		    (date.isEqual(cachedDate) || date.isAfter(cachedDate))
+		    ) {
+		cachedValuesUsed = true ;
+
+		synchronized (lock) {
+		    startRead = (int) cachedMeterReading;
+		    dataValid = true ;
+		    dateString = date.format(DATE_PATTERN) ;
+		    if (date.isAfter(cachedDate)) {
+			//
+			//
+			//  This next line is a MAJOR design decision
+			//  to change the date of this object to the cached
+			//  date despite this object having been created 
+			//  with a different date.
+			//
+			//
+			date = cachedDate ;
+			//
+			//
+			//
+			dateChanged = true ;
+		    }
+		} // End of synchronized on lock.
+	    } else {
+		synchronized (lock) {
+		    dateString = date.format(DATE_PATTERN) ;
+		}  // End of synchronized on lock.
+	    }
+	}  // End of synchronized on cacheLock.
+
+	//
+	// Check that there really is data.
+	//
+
+	//
+	// First, check that the data was properly accessed.
+	//
+
+	//
+	// Second, check that the server is up.
+	//
+
+
+	/*
+	 * ***********************************************************
+	 */
+	String dateWantedString = 
+		Integer.toString(date.getMonthValue()) +
+		"/" +
+		Integer.toString(date.getDayOfMonth()) + 
+		"/" +
+		Integer.toString(date.getYear()) ;
+	ValuesForDate values = getAllValuesForDate(wd, dateWantedString) ;
+	float startReadFloat = Float.parseFloat(values.getStartRead()) ;
+	msg("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv") ;
+	msg("") ;
+	msg("Here is the data in ValuesForDate values:") ;
+	msg("") ;
+	msg("Date           is " + values.getDate()) ;
+	msg("Success status is " + values.isSuccess()) ;
+	msg("Consumption    is " + values.getConsumption()) ;
+	msg("Start reading  is " + values.getStartRead()) ;
+	msg("End   reading  is " + values.getEndRead()) ;
+	msg("") ;
+	msg("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^") ;
+	msg("") ;
+	/*
+	 * ***********************************************************
+	 */
+
+//	    wpData = wp.indexOf(fromStringEndRead) ;
+//	    dataString = wp.subString(wpData, 
+//		    fromStringEndRead, 
+//		    toStringEndRead) ;
+//	    float endReadFloat = Float.parseFloat(dataString) ;
+	    synchronized (cacheLock) {
+		if (!cachedValuesUsed) {
+		    synchronized (lock) {
+			startRead = (int) startReadFloat;
+			dataValid = true;
+		    }
+		}
+	    }
+    }  // End of getData3
+
 
     private void logout() {
 	//
@@ -495,44 +900,45 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	return true ;
     }
     
-//    private static String dataFound(WebDriver w) {
-//	boolean weTextContainsSearchFor = false ; // The initialization
-//	  // makes the Eclipse
-//	  // compiler happy.
-//	boolean weTextContainsNoData = false ; // The initialization
-//	  // makes the Eclipse
-//	  // compiler happy.
-//	String weText = null ; // The initialization makes 
-//			       // the Eclipse compiler happy.
-//	WebElement we = null ;
-//	for (WebElement e : w.findElements(By.xpath("//div"))) {
-//	    try {
-//		we = e ;
-//		if (we !=null) weText = we.getText() ;
-//		if (weText != null) {
-//		    weTextContainsSearchFor = weText.contains(SEARCH_FOR) ;
-//		    weTextContainsNoData    = weText.contains(NO_DATA) ;
+    private static String dataFound(WebDriver w) {
+    //
+    // "we" is WebElement
+    //
+	boolean weTextContainsSearchFor = false ; 
+	// The initialization above makes the Eclipse compiler happy.
+	boolean weTextContainsNoData = false ; 
+	// The initialization above makes the Eclipse compiler happy.
+	String weText = null ; 
+	// The initialization above makes the Eclipse compiler happy.
+	WebElement we = null ;
+	for (WebElement e : w.findElements(By.xpath("//div"))) {
+	    try {
+		we = e ;
+		if (we !=null) weText = we.getText() ;
+		if (weText != null) {
+		    weTextContainsSearchFor = weText.contains(SEARCH_FOR) ;
+		    weTextContainsNoData    = weText.contains(NO_DATA) ;
+		}
+		if (weTextContainsSearchFor) return weText ;
+		if (weTextContainsNoData) {
+		    System.out.println();
+		    System.out.println("*** NO DATA IS AVAILABLE. ***") ;
+		    System.out.println();
+		    return null ;
+		}
+	    } catch (org.openqa.selenium.StaleElementReferenceException e1) {
+		System.out.println(" Caught SER Exception on: " + we + ".") ;
+//		String s = e1.getMessage() ;
+//		if (s != null) {
+//		    System.out.println("Message is: " + s) ;
 //		}
-//		if (weTextContainsSearchFor) return weText ;
-//		if (weTextContainsNoData) {
-//		    System.out.println();
-//		    System.out.println("*** NO DATA IS AVAILABLE. ***") ;
-//		    System.out.println();
-//		    return null ;
-//		}
-//	    } catch (org.openqa.selenium.StaleElementReferenceException e1) {
-//		System.out.println(" Caught SER Exception on: " + we + ".") ;
-////		String s = e1.getMessage() ;
-////		if (s != null) {
-////		    System.out.println("Message is: " + s) ;
-////		}
-//		e1.printStackTrace(System.out) ;
-//		System.out.println() ;
-//		return null ;
-//	    }
-//	}
-//	return null ;
-//    }
+		e1.printStackTrace(System.out) ;
+		System.out.println() ;
+		return null ;
+	    }
+	}
+	return null ;
+    }
 
     /**
      * @param browser
@@ -588,6 +994,135 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 //	for (WebElement e : select) e.sendKeys("E") ;
 //	return successful ; 
 //    }
+
+
+    /**
+     * @param browser
+     * @param date
+     */
+    private static ValuesForDate getAllValuesForDate
+    (WebDriver browser, String date) 
+    {
+	/*
+	 * The date String xx/yy/zzzz
+	 * must be a two-digit month number (1 as 01, etc.) in 
+	 * the range 01 through 12,
+	 * followed by a slash, followed by
+	 * a two-digit day number (1 as 01, etc.)in the range 01 through 31,
+	 * followed by a slash, followed by
+	 * a four-digit year number.
+	 * 
+	 * Partially verify the date String: 
+	 */
+	if (date == null) {
+	    System.out.println("Null date in " + Util.getCallerMethodName()) ;
+	} else {
+	    if ( ! (
+		    date.length() == 10 &&
+		    Character.isDigit(date.charAt(0)) &&
+		    Character.isDigit(date.charAt(1)) &&
+		    date.charAt(2) == '/' &&
+		    Character.isDigit(date.charAt(3)) &&
+		    Character.isDigit(date.charAt(4)) &&
+		    date.charAt(5) == '/' &&
+		    Character.isDigit(date.charAt(6)) &&
+		    Character.isDigit(date.charAt(7)) &&
+		    Character.isDigit(date.charAt(8)) &&
+		    Character.isDigit(date.charAt(9))
+		    ) ) {
+		System.out.println("Bad date " 
+			+ date 
+			+ " in " 
+			+ Util.getCallerMethodName()) ;
+	    }
+	}
+	try {
+	    LocalDate.parse( date, DATE_PATTERN ) ;
+	} 
+	catch (DateTimeParseException e) {
+		System.out.println("Exception for bad date " 
+			+ date 
+			+ " in " 
+			+ Util.getCallerMethodName()) ;
+		e.printStackTrace() ;
+	}
+	ValuesForDate resultForDate ;
+	boolean successful = false ;
+	String result = "" ;
+	if (browser == null) {
+	    System.out.println("Null browser in " + 
+		    Util.getCallerMethodName()) ;
+	    return new ValuesForDate.Builder()
+		    .success(false)
+		    .date(EMPTY) 
+		    .startRead(EMPTY)
+		    .endRead(EMPTY)
+		    .consumption(EMPTY)
+		    .build() ;
+	}
+	//
+	// Set Start Date and End Date
+	//
+	List<WebElement> input = browser.findElements(By.xpath("//input")) ;
+	for (WebElement e : input) sendStringToWebElement(date, e) ;
+	    //
+	    // "D" = Daily Meter Reads
+	    //
+	List<WebElement> select = browser.findElements(By.xpath("//select")) ;
+	for (WebElement e : select) e.sendKeys("D") ;
+	
+	//
+	//  Results here.
+	//
+	
+	String results[] = {"", "", "", "", ""} ;
+	if (dataAvailable(browser)) {
+	    for (int i = 0; i < DATA_RETRY_LIMIT; i++) {
+		result = dataFound(browser);
+		if (result != null) break;
+		sleepMillis(DATA_RETRY_MILLIS);
+	    } 
+	}
+	if (result == null) {
+	    System.out.println();
+	    System.out.println("Could not find data after " + 
+		    DATA_RETRY_LIMIT + " tries and after " + 
+		    (DATA_RETRY_LIMIT*DATA_RETRY_MILLIS) + 
+		    " milliseconds for date: " + date + ".") ;
+	    System.out.println();
+	    System.exit(-1) ;
+	}
+	//
+	// The next line eliminates a compiler warning.
+	//
+	if (result == null) result = "" ;
+	//
+	//
+	//
+	result = result.substring(result.lastIndexOf(SEARCH_FOR)) ;
+	results = result.split("\\s");
+	if ( results[1].contentEquals(date) ) successful = true ;
+	if (successful) {
+	    System.out.println();
+	    System.out.println("Date        is " + results[1]);
+	    System.out.println("Start Read  is " + results[2]);
+	    System.out.println("End   Read  is " + results[3]);
+	    System.out.println("Consumption is " + results[4]);
+	    System.out.println();
+	    resultForDate = new ValuesForDate.Builder()
+		    .success(true)
+		    .date(results[1]) 
+		    .startRead(results[2])
+		    .endRead(results[3])
+		    .consumption(results[4])
+		    .build() ;
+	} else {
+	    resultForDate = new ValuesForDate.Builder().success(false).build() ;
+	    return resultForDate ;
+	}
+	for (WebElement e : select) e.sendKeys("E") ;
+	return resultForDate ; 
+    }
 
     private void getLatestEndMeterReadingAndUpdateCache(WebDriver wd) {
 	final int titleLiteral = 0 ;
@@ -985,6 +1520,104 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	public long getMeasurement() {
 	    return endTime - startTime ;
 	}
+    }
+    static class ValuesForDate {
+	private boolean success = false ;
+	private String date = " 01/01/00" ;
+	private String startRead = "0" ;
+	private String endRead = "0" ;
+	private String consumption = "0" ;
+	
+	//
+	// No accessible no-argument constructor.
+	//
+	private ValuesForDate() {}
+	
+	private ValuesForDate(Builder b) {
+	    success     = b.success ;
+	    date        = b.date ;
+	    startRead   = b.startRead ;
+	    endRead     = b.endRead ;
+	    consumption = b.consumption ;
+	}
+	
+	    public static class Builder {
+		// Required parameters
+		boolean success ;
+		String date ;
+		String startRead ;
+		String endRead ;
+		String consumption ;
+		
+		// Optional parameters initialized to default values - NONE
+		
+		public Builder success(boolean s) {
+		    success = s ;
+		    return this ;
+		}
+		
+		public Builder date(String dateOfValuesForDate) {
+		    date = dateOfValuesForDate ;  
+		    return this ;
+		}
+		
+		public Builder startRead(String startValue) {
+		    startRead = startValue ;
+		    return this ;
+		}
+		
+		public Builder endRead(String endValue) {
+		    endRead = endValue ;
+		    return this ;
+		}
+		
+		public Builder consumption(String consumptionValue) {
+		    consumption = consumptionValue ;
+		    return this ;
+		}
+		
+/*       1         2         3         4         5         6         7        */
+/*3456789012345678901234567890123456789012345678901234567890123456789012345678*/		
+		public ValuesForDate build() {
+		    return new ValuesForDate(this) ;
+		}
+	    }
+
+	    /**
+	     * @return the success
+	     */
+	    public boolean isSuccess() {
+	        return success;
+	    }
+
+	    /**
+	     * @return the date
+	     */
+	    public String getDate() {
+	        return date;
+	    }
+
+	    /**
+	     * @return the startRead
+	     */
+	    public String getStartRead() {
+	        return startRead;
+	    }
+
+	    /**
+	     * @return the endRead
+	     */
+	    public String getEndRead() {
+	        return endRead;
+	    }
+
+	    /**
+	     * @return the consumption
+	     */
+	    public String getConsumption() {
+	        return consumption;
+	    }
+
     }
 }
 
