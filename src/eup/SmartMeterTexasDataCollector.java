@@ -189,7 +189,10 @@ SmartMeterTexasDataInterface
 	if (displayUseProxy)     useProxy(firefoxOptions) ;
 	if (!DEBUG_SHOW_BROWSER) firefoxOptions.setHeadless(true);
 	msg("Built " + this) ;
+<<<<<<< HEAD
 	(new AssertionError("Built SMTDC, dumping call stack...")).printStackTrace() ;
+=======
+>>>>>>> refs/remotes/origin/master
     }
     
     @Override
