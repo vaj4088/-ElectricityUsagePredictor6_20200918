@@ -829,11 +829,14 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	 * ***********************************************************
 	 */
 	String dateWantedString = 
+		((date.getMonthValue()<10)?"0":"") +
 		Integer.toString(date.getMonthValue()) +
 		"/" +
+		((date.getDayOfMonth()<10)?"0":"") +
 		Integer.toString(date.getDayOfMonth()) + 
 		"/" +
 		Integer.toString(date.getYear()) ;
+	
 	ValuesForDate values = getAllValuesForDate(wd, dateWantedString) ;
 	float startReadFloat = Float.parseFloat(values.getStartRead()) ;
 	msg("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv") ;
