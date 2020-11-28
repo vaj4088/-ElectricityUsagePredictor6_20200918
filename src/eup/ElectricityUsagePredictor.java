@@ -57,6 +57,7 @@ implements ActionListener {
     private static final int changeProgress = 10 ;
     private static final int startProgress2 = 
 	    startProgress1 + 5 * changeProgress ;
+    private static final int EXTRA_BUTTON_SPACE = 10 ;
     
     private static final long serialVersionUID = 1L;
 
@@ -331,7 +332,7 @@ implements ActionListener {
 		createCompoundBorder(BorderFactory.
 			createCompoundBorder(BorderFactory.
 				createTitledBorder(
-					"Current Date (rarely changed)"),
+					"Current Date"),
 				BorderFactory.createEmptyBorder(5, 5, 5, 5)),
 				datePickerCurrentDate.getBorder()));
 //	Box vboxCurrent = Box.createVerticalBox() ;
@@ -346,9 +347,12 @@ implements ActionListener {
 	datePickerNextBillDate = new DatePicker() ;
 	datePickerNextBillDate.setDate(
 		LocalDate.of(
-			    Integer.parseInt(store.get(Setting.NEXT_BILL_DATE_YEAR)), 
-			    Integer.parseInt(store.get(Setting.NEXT_BILL_DATE_MONTH)), 
-			    Integer.parseInt(store.get(Setting.NEXT_BILL_DATE_DAY))
+			    Integer.parseInt(store.get(
+				    Setting.NEXT_BILL_DATE_YEAR)), 
+			    Integer.parseInt(store.get(
+				    Setting.NEXT_BILL_DATE_MONTH)), 
+			    Integer.parseInt(store.get(
+				    Setting.NEXT_BILL_DATE_DAY))
 			)) ;
 
 //	UtilDateModel modelNextBillDate = new UtilDateModel(
@@ -380,10 +384,15 @@ implements ActionListener {
 				datePickerNextBillDate.getBorder()));
 	hbox1.add(datePickerNextBillDate) ;
 	
-	jb = new JButton("GO (predict)") ; 
+	jb = new JButton("GO (predict)") ;
+        jb.setContentAreaFilled(false) ;
+	jb.setOpaque(true) ;
 	jb.setBackground(Color.GREEN) ;
 	jb.setFont(jb.getFont().deriveFont(Font.BOLD)) ;
+	jb.setBorder(BorderFactory.createRaisedSoftBevelBorder())  ;
+	hbox1.add(Box.createHorizontalStrut(EXTRA_BUTTON_SPACE)) ;
 	hbox1.add(jb) ;
+	hbox1.add(Box.createHorizontalStrut(EXTRA_BUTTON_SPACE)) ;
 
 	add(vbox) ;
 	pack();
@@ -552,6 +561,68 @@ implements ActionListener {
 	     * End of storing year, month and day of the next billing date.
 	     */
 
+	    
+	    /*
+	     * Get data for the current bill date meter reading.
+	     */
+	    int currentBillMeterReading ;
+	    LocalDate currentBillDateUsed ;
+	    SmartMeterTexasDataInterface gdcBDLD = null ;
+	    boolean usedMostRecentBillReadingCache = false ;
+	    if (canUseCachedValue(
+		    gui.settingsMap,
+		    Setting.MOST_RECENT_BILL_DATE_YEAR,
+		    Setting.MOST_RECENT_BILL_DATE_MONTH,
+		    Setting.MOST_RECENT_BILL_DATE_DAY,
+		    Setting.MOST_RECENT_BILL_READING_VALIDITY,
+		    cBDLD
+		    )) {
+		currentBillMeterReading = 
+			Integer.parseInt(
+				CommonPreferences.get(
+				gui.settingsMap.
+				get(Setting.MOST_RECENT_BILL_DATE_READING)
+				)) ;
+		currentBillDateUsed = cBDLD ;
+		usedMostRecentBillReadingCache = true ;
+	    } else {
+		    gdcBDLD = new SmartMeterTexasDataCollector.Builder()
+			    .date(cBDLD)
+			    .startProgressAt(startProgress2)
+			    .changeProgressBy(changeProgress)
+			    .labelTheProgress(
+				    "Getting data for most " +
+				    "recent billing date.")
+			    .build();
+		    gdcBDLD.setFeedbacker(gui.fb) ;
+		    currentBillMeterReading = gdcBDLD.getStartRead();
+			writeToCache(
+				gui.settingsMap, 
+				Setting.MOST_RECENT_BILL_DATE_YEAR,
+				Setting.MOST_RECENT_BILL_DATE_MONTH,
+				Setting.MOST_RECENT_BILL_DATE_DAY,
+				Setting.MOST_RECENT_BILL_DATE_READING,
+				Setting.MOST_RECENT_BILL_READING_VALIDITY,
+				gdcBDLD.getDate()
+				) ;
+			CommonPreferences.set(
+				gui.settingsMap.
+				get(Setting.MOST_RECENT_BILL_DATE_READING),
+				Integer.toString(currentBillMeterReading)
+				) ;
+			CommonPreferences.set(
+				gui.settingsMap.
+				get(Setting.MOST_RECENT_BILL_READING_VALIDITY),
+				Setting.VALID
+				) ;
+		    currentBillDateUsed = gdcBDLD.getDate();
+		    usedMostRecentBillReadingCache = false ;
+	    }
+	    /*
+	     * End of
+	     * get data for the current bill date meter reading.
+	     */
+
 	    /*
 	     * Get data for the current date meter reading.
 	     */
@@ -615,67 +686,6 @@ implements ActionListener {
 	     * get data for the current date meter reading.
 	     */
 	    
-	    /*
-	     * Get data for the current bill date meter reading.
-	     */
-	    int currentBillMeterReading ;
-	    LocalDate currentBillDateUsed ;
-	    SmartMeterTexasDataInterface gdcBDLD = null ;
-	    boolean usedMostRecentBillReadingCache = false ;
-	    if (canUseCachedValue(
-		    gui.settingsMap,
-		    Setting.MOST_RECENT_BILL_DATE_YEAR,
-		    Setting.MOST_RECENT_BILL_DATE_MONTH,
-		    Setting.MOST_RECENT_BILL_DATE_DAY,
-		    Setting.MOST_RECENT_BILL_READING_VALIDITY,
-		    cBDLD
-		    )) {
-		currentBillMeterReading = 
-			Integer.parseInt(
-				CommonPreferences.get(
-				gui.settingsMap.
-				get(Setting.MOST_RECENT_BILL_DATE_READING)
-				)) ;
-		currentBillDateUsed = cBDLD ;
-		usedMostRecentBillReadingCache = true ;
-	    } else {
-		    gdcBDLD = new SmartMeterTexasDataCollector.Builder()
-			    .date(cBDLD)
-			    .startProgressAt(startProgress2)
-			    .changeProgressBy(changeProgress)
-			    .labelTheProgress(
-				    "Getting data for most " +
-				    "recent billing date.")
-			    .build();
-		    gdcBDLD.setFeedbacker(gui.fb) ;
-		    currentBillMeterReading = gdcBDLD.getStartRead();
-			writeToCache(
-				gui.settingsMap, 
-				Setting.MOST_RECENT_BILL_DATE_YEAR,
-				Setting.MOST_RECENT_BILL_DATE_MONTH,
-				Setting.MOST_RECENT_BILL_DATE_DAY,
-				Setting.MOST_RECENT_BILL_DATE_READING,
-				Setting.MOST_RECENT_BILL_READING_VALIDITY,
-				gdcBDLD.getDate()
-				) ;
-			CommonPreferences.set(
-				gui.settingsMap.
-				get(Setting.MOST_RECENT_BILL_DATE_READING),
-				Integer.toString(currentBillMeterReading)
-				) ;
-			CommonPreferences.set(
-				gui.settingsMap.
-				get(Setting.MOST_RECENT_BILL_READING_VALIDITY),
-				Setting.VALID
-				) ;
-		    currentBillDateUsed = gdcBDLD.getDate();
-		    usedMostRecentBillReadingCache = false ;
-	    }
-	    /*
-	     * End of
-	     * get data for the current bill date meter reading.
-	     */
-
 	    Predictor predictor = new Predictor.Builder().
 		    currentBillDate(currentBillDateUsed).
 		    currentBillMeterReading(currentBillMeterReading).
