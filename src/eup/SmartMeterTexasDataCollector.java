@@ -189,11 +189,8 @@ SmartMeterTexasDataInterface
 	if (displayUseProxy)     useProxy(firefoxOptions) ;
 	if (!DEBUG_SHOW_BROWSER) firefoxOptions.setHeadless(true);
 	msg("Built " + this) ;
-//<<<<<<< HEAD
-	new AssertionError("Built SMTDC, dumping call stack...")
-	.printStackTrace() ;
-//=======
-//>>>>>>> refs/remotes/origin/master
+//	new AssertionError("Built SMTDC, dumping call stack...")
+//	.printStackTrace() ;
     }
     
     @Override
@@ -366,58 +363,6 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	}
     }
 
-//    private void getLatestEndMeterReadingAndUpdateCache(WebPage wp) {
-//	WPLocation wpl =
-//		wp.indexOf("Latest End of Day Read") ;
-//	assertGoodLocation(wpl) ;
-//	int line = wpl.getLine() ;
-//	String endDate = wp.subString(
-//		line+1, 
-//		"<TD><SPAN name=\"ler_date\">", 
-//		"</SPAN></TD>"
-//		) ;
-//	String endValue = wp.subString(
-//		line+3, 
-//		"<TD><SPAN name=\"ler_read\">", 
-//		"</SPAN></TD>"
-//		) ;
-//	LocalDate startDate = getLatestStartDate(endDate) ;
-//	long startReading = getLatestStartRead(endValue) ;
-//	synchronized(cacheLock) {
-//	    cachedDate         = startDate ;
-//	    cachedMeterReading = startReading ;
-//	    cachedValuesValid = true ;
-//	}
-//    }
-
-//    private LocalDate getLatestStartDate(String dateIn) {
-//	final char FSLASH = '/' ;
-//	if ((dateIn.charAt(2) == FSLASH) &&
-//		(dateIn.charAt(5) == FSLASH) &&
-//		(dateIn.length()==10)) {
-//	    String yearString = dateIn.substring(6, 10) ;
-//	    String monthString = dateIn.substring(0, 2) ;
-//	    String dayString = dateIn.substring(3, 5) ;
-//	    int year  = Integer.parseInt(yearString) ;
-//	    int month = Integer.parseInt(monthString) ;
-//	    int day   = Integer.parseInt(dayString) ; 
-//	    return LocalDate.of(year, month, day).plusDays(1) ;
-//	}
-//	throw new AssertionError(
-//		"Bad date string of " +
-//		dateIn +
-//		" in getLatestStartDate."
-//		) ;
-//    }
-
-//    private long getLatestStartRead(String in) {
-//	return (long)Float.parseFloat(in) ;
-//    }
-    /*
-     * 	DateTimeFormatter dtf = 
-		DateTimeFormatter.ofPattern("MM'/'dd'/'yyyy") ;
-
-     */
 
     private WebDriver login() {
 	Context context = new Context() ;
@@ -465,282 +410,11 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	}
     }
 
-
-    /**
-     * @param wd  
-     */
-    void getData2(WebDriver wd) {//    void getData(WebPage webPage) {
-	DateTimeFormatter dtf = 
-		DateTimeFormatter.ofPattern("MM'/'dd'/'yyyy") ;
-	String dateString ;
-	/*
-	 * Need to compare variable date of type LocalDate
-	 * with variable cachedDate of type LocalDate,
-	 * using cache lock cacheLock to synchronize.
-	 * 
-	 * If boolean variable cachedValuesValid is true
-	 * and the comparison is equal, then
-	 * get the cached meter reading from the long variable
-	 * cachedMeterReading.
-	 * 
-	 */
-	synchronized (cacheLock) {
-	    cachedValuesUsed  = false ;
-	    if (cachedValuesValid && 
-		    (date.isEqual(cachedDate) || date.isAfter(cachedDate))
-		    ) {
-		cachedValuesUsed = true ;
-		/*
-		 * If we got here, then fake the end reading
-		 * (making it the same as the start reading
-		 *  because further data is unavailable)
-		 * and get data for a prior day
-		 * (because there are suffixes to be handled
-		 *   so that logging out may be performed).
-		 */
-		synchronized (lock) {
-		    startRead = (int) cachedMeterReading;
-//		    endRead = startRead ;
-		    dataValid = true ;
-		    dateString = date.minusDays(3).format(dtf) ;
-		    if (/*date.WebDriver wdisAfter(cachedDate)*/true/* */) {
-			//
-			//
-			//  This next line is a MAJOR design decision
-			//  to change the date of this object to the cached
-			//  date despite this object having been created 
-			//  with a different date.
-			//
-			//
-			date = cachedDate ;
-			//
-			//
-			//
-			dateChanged = true ;
-		    }
-		}
-	    } else {
-		synchronized (lock) {
-		    dateString = date.format(dtf) ;
-		}
-	    }
-	    /*
-	     * vvvv    To get rid of a warning. vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-	     */
-	    msg(dateString) ;
-	    /*
-	     * ^^^^    To get rid of a warning. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	     */
-	}
-
-//	List<NameValuePair> nameValuePairs = new ArrayList<>();
-//	final String VIEWUSAGE = "viewUsage_" ; 	// The capital "U" is 
-	// significant !
-
-//	ArrayList<NameValuePair> al = Util.makeArrayList(
-//		getSomeFieldsInFirstFormSMT(webPage)) ;
-//	ListIterator<NameValuePair> lit = al.listIterator() ;
-//	while (lit.hasNext()) {
-//	    NameValuePair nvp = lit.next() ;
-//	    String name = nvp.getName() ;
-//	    if (name.startsWith(VIEWUSAGE)) {
-//		nvp.setValue(dateString);
-//		lit.set(nvp) ;
-//	    }
-//	}
-//	nameValuePairs.addAll(al) ;
-//	String pageURL = "https://www.smartmetertexas.com" + addressSuffix ;
-	//
-	// Get the client's current state.
-	//
-//	HttpState state = client.getState() ;
-	//
-	// Get the client's first cookie (cookie 0).
-	//
-//	Cookie cookie = state.getCookies()[0] ;
-	//
-	// Get the parameters of the cookie so that 
-	// we know what parameters to use.
-	//
-//	String domain = cookie.getDomain() ;
-//	String path   = cookie.getPath() ;
-//	Date expires  = cookie.getExpiryDate() ;
-//	boolean secure= cookie.getSecure() ;
-	//
-	// Create the new cookie and add it to the collection of cookies.
-	//
-//	Cookie newCookie = new Cookie(
-//		domain, 
-//		"IV_JCT", 
-//		"%2Ftexas",
-//		path,
-//		expires,
-//		secure
-//		) ;
-//	state.addCookie(newCookie) ; 
-	//
-	//  Update the client's state.
-	//
-//	client.setState(state) ;
-//	method.addRequestHeader("Accept", 
-//		"text/html,application/xhtml+xml,"+
-//		"application/xml;q=0.9,*/*;q=0.8") ;
-//	method.addRequestHeader("Accept-Language", "en-US,en;q=0.5") ;
-//	method.addRequestHeader("Referer", 
-//		"https://www.smartmetertexas.com/texas/wps/myportal") ;
-//	method.addRequestHeader("Connection", "keep-alive") ;
-//	method.addRequestHeader("Upgrade-Insecure-Requests", "1") ;
-//	method.removeRequestHeader("Content-Length") ;
-	//
-	// Initialized to account for the subtraction 
-	// that will be needed.
-	//
-//	int contentLengthAccumulator = -1 ;
-//	for (NameValuePair nvp : nameValuePairs) {
-//	    contentLengthAccumulator += nvp.getName().length() ;
-//	    contentLengthAccumulator += nvp.getValue().length() ;
-//	    contentLengthAccumulator += 2 ;  // For '&' and ';'
-//	}
-//	if (contentLengthAccumulator == -1) {
-//	    contentLengthAccumulator = 0 ;  // No length to body.
-//	}
-//	method.addRequestHeader(
-//		"Content-Length", 
-//		Integer.toString(contentLengthAccumulator)) ;
-	//
-	// <><><><><>  Get a web page  <><><><><><>
-	//
-//	WebPage wp = getPage(
-//		pageURL,nameValuePairs, null);
-	//
-	// Check that there really is data.
-	//
-
-	//
-	// First, check that the data was properly accessed.
-	//
-//	WPLocation resourceMissing = wp.indexOf(msgNoResource) ;
-//	if (!badLocation(resourceMissing)) {
-//	    StringBuilder sb = new StringBuilder("Resource is missing, "
-//		    + "fix the program and please try again later.") ;
-//	    if (null == fb) {
-//		System.out.println(sb);
-//	    } else {
-//		fb.log(sb,
-//			Feedbacker.TO_FILE + Feedbacker.TO_GUI + 
-//			Feedbacker.TO_OUT
-//			+ Feedbacker.FLUSH) ;
-//	    }
-//	    try {
-//		Thread.sleep(10000) ;
-//	    } catch (InterruptedException e) {
-//		e.printStackTrace();
-//		// Restore the interrupted status
-//		Thread.currentThread().interrupt();
-//	    }
-//	    System.exit(-26) ;
-//	}
-
-	//
-	// Second, check that the server is up.
-	//
-//	WPLocation serverDown = wp.indexOf(msgDown);
-//	if (!badLocation(serverDown)) {
-//	    synchronized(lock) {
-//		dataValid = false ;
-//	    }
-//	    StringBuilder sb = new StringBuilder(
-//		    "No predicting is possible now, "
-//			    + "please try again later.") ;
-//	    if (null == fb) {
-//		System.out.println(sb);
-//	    } else {
-//		fb.log(sb,
-//			Feedbacker.TO_FILE + Feedbacker.TO_GUI + 
-//			Feedbacker.TO_OUT
-//			+ Feedbacker.FLUSH) ;
-//	    }
-//	    try {
-//		Thread.sleep(10000) ;
-//	    } catch (InterruptedException e) {
-//		e.printStackTrace();
-//		// Restore the interrupted status
-//		Thread.currentThread().interrupt();
-//	    }
-//	    System.exit(-27) ;
-//	} else {
-	    /*
-	     * NOW : GET THE DATA !!!
-	     */
-//	    WPLocation wpData = wp.indexOf(fromStringStartRead) ;
-//	    if (displayGetDataPage) {
-//		if (badLocation(wpData)) {
-//		    StringBuilder sb = new StringBuilder() ;
-//		    for (String line : wp.getLines()) {
-//			sb.append(line) ;
-//		    }
-//		    System.out.println("=====     SHOW PAGE.     =====") ;
-//		    System.out.println(sb) ;
-//		    System.out.println("=====     SHOWED PAGE.     =====") ;
-//		}
-//	    }
-//	    if (displayGetDataParameters) {
-//		System.out.println(
-//			"=====     SHOW PARAMETERS.     =====") ;
-//		System.out.println("URL:") ;
-//		System.out.println(pageURL) ;
-//		System.out.println("NAMEVALUEPAIRS:") ;
-//		for (NameValuePair nvp : nameValuePairs) {
-//		    System.out.println(nvp) ;
-//		}
-//		System.out.println("REQUEST HEADERS2:") ;
-//		for (Header h : method.getRequestHeaders()) {
-//		    System.out.println(h) ;
-//		}
-//		System.out.println(
-//			"=====     SHOWED PARAMETERS.     =====") ;
-//	    }
-	
-	/* ***************************************************************
-	 * Get a floating-point value that is the start reading value.
-	 */
-	float startReadFloat /* */ = 0 /* */ ;
-//	    assertGoodLocation(wpData) ;
-//	    String dataString = wp.subString(wpData, 
-//		    fromStringStartRead, 
-//		    toStringStartRead) ;
-//	    float startReadFloat = Float.parseFloat(dataString) ;
-	/*
-	 * *************************************************************** 
-	 */
-
-//	    wpData = wp.indexOf(fromStringEndRead) ;
-//	    dataString = wp.subString(wpData, 
-//		    fromStringEndRead, 
-//		    toStringEndRead) ;
-//	    float endReadFloat = Float.parseFloat(dataString) ;
-	    synchronized (cacheLock) {
-		if (!cachedValuesUsed) {
-		    synchronized (lock) {
-			startRead = (int) startReadFloat;
-//			endRead = (int) endReadFloat;
-			dataValid = true;
-		    }
-		}
-	    }
-//	}
-	/*
-	 * NOW : GET THE NEW addressSuffix !!!
-	 */
-//	addressSuffix = extractAddressFromGetData(wp);
-
-    }
-
-
     /**
      * @param wd  
      */
     void getData(WebDriver wd) {
+	ValuesForDate values = null ;
 	getDataHelper(wd) ;
 	/*
 	 * 1 (deleted)
@@ -773,7 +447,7 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	 * using cache lock cacheLock to synchronize.
 	 * 
 	 * If boolean variable cachedValuesValid is true
-	 * and the comparison is equal, then
+	 * and the comparison is equal or after, then
 	 * get the cached meter reading from the long variable
 	 * cachedMeterReading.
 	 * 
@@ -804,6 +478,13 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 			//
 			dateChanged = true ;
 		    }
+		    values = new ValuesForDate.Builder()
+		    .success(true)
+		    .date(dateString) 
+		    .startRead(Integer.toString(startRead))
+		    .endRead(Integer.toString(startRead))
+		    .consumption("0")
+		    .build() ;
 		} // End of synchronized on lock.
 	    } else {
 		synchronized (lock) {
@@ -837,7 +518,9 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 		"/" +
 		Integer.toString(date.getYear()) ;
 	
-	ValuesForDate values = getAllValuesForDate(wd, dateWantedString) ;
+	if (values == null) {
+	    values = getAllValuesForDate(wd, dateWantedString) ;
+	}
 	float startReadFloat = Float.parseFloat(values.getStartRead()) ;
 	msg("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv") ;
 	msg("") ;
@@ -870,11 +553,14 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	    }
     }  // End of getData
 
-
-    private void logout() {
+    private void logout(WebDriver wd) {
 	//
 	// Logging out appears to be UNNECESSARY.
 	//
+	// However, closing the browser is nice.
+	// NOTE:  This closes a browser tab but exits the browser
+	//        if and only if this was the last open tab.
+	wd.close() ;
     }
 
     private void invoke() {
@@ -885,7 +571,7 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	//
 	// login -> waitForFirstPageAfterLogin -> getData
 	//
-	logout() ;
+	logout(browser) ;
     }
 
     /**
@@ -1001,7 +687,6 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 //	for (WebElement e : select) e.sendKeys("E") ;
 //	return successful ; 
 //    }
-
 
     /**
      * @param browser
@@ -1338,23 +1023,6 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
     }
 
     /**
-     * @return the endRead
-     */
-//    public int getEndRead() {
-//	int value ;
-//	boolean dv ;
-//	synchronized(lock) {
-//	    value = endRead ;
-//	    dv = dataValid ;
-//	}
-//	if (!dv) {
-//	    invoke() ;  
-//	    value = endRead ;
-//	}
-//	return value;
-//    }
-
-    /**
      * @return the dateChanged
      */
     @Override
@@ -1627,5 +1295,3 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 
     }
 }
-
-
