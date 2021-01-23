@@ -51,6 +51,7 @@ implements ActionListener {
     /**
      * 
      */
+    private static final boolean DEBUG_SHOW_MESSAGES = false ;
     private static final boolean disableOutRedirection = false;
     private static final boolean disableErrRedirection = false;
     private static final boolean USE_PERSISTENT_STORAGE = true ;
@@ -420,10 +421,10 @@ implements ActionListener {
 
 	add(vbox) ;
 	pack();
-	fb.log("Making visible.", Feedbacker.TO_FILE + 
+	if (DEBUG_SHOW_MESSAGES) fb.log("Making visible.", Feedbacker.TO_FILE + 
 		Feedbacker.TO_GUI);
 	setVisible(true);
-	jb.                       addActionListener(this) ;
+	jb.addActionListener(this) ;
     } 
 
     /**
@@ -431,6 +432,11 @@ implements ActionListener {
      */
     private void connectInternalListeners() {
 	fb.log("GUI controller setup commencing.", Feedbacker.TO_FILE) ;
+	if (DEBUG_SHOW_MESSAGES) {
+	    fb.log("Attempting to show debug messages.", Feedbacker.TO_FILE) ;
+	} else {
+	    fb.log("Not showing dbug messages.", Feedbacker.TO_FILE) ;
+	}
 	if (USE_PERSISTENT_STORAGE) {
 	    fb.log("Attempting to use persistent storage.", 
 		    Feedbacker.TO_FILE) ;
@@ -477,7 +483,9 @@ implements ActionListener {
 		    ElectricityUsagePredictor gui = 
 			    new ElectricityUsagePredictor(
 			    "Electricity Usage Predictor");
-		    gui.fb.log("Finished setting up GUI.");
+		    if (DEBUG_SHOW_MESSAGES) {
+			gui.fb.log("Finished setting up GUI.");
+		    }
 		    guiAtomicReference.set(gui);
 		}
 	    });

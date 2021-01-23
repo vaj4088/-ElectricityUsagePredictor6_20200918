@@ -65,7 +65,8 @@ SmartMeterTexasDataInterface
     
 //    private final AccountInfo accountInfo = new AccountInfo() ;
 
-    private static final boolean DEBUG_SHOW_BROWSER = true ;
+    private static final boolean DEBUG_SHOW_MESSAGES = false ;
+    private static final boolean DEBUG_SHOW_BROWSER = false ;
     private static final int RETRY_LIMIT = 5 ;
     private static final int DATA_RETRY_LIMIT = 5 ;
     private static final int DATA_RETRY_MILLIS = 1000 ;
@@ -171,25 +172,14 @@ SmartMeterTexasDataInterface
 	this.progressDelta = builder.progressDelta ;
 	this.progressLabel = builder.progressLabel ;
 	progress = progressStart ;
-//	System.setProperty(
-//		"webdriver.gecko.driver", 
-//		"/home/xxxxxx/Desktop/workspaces/workspace_(Java_Luna)" +
-//		"/BrowserScraping2/drivers/geckodriver") ;
 	System.setProperty(
 		"webdriver.gecko.driver", 
-//		"/home/vaj4088/git/ElectricityUsagePredictor5/drivers/" +
-//		"geckodriver") ;
 		"/home/vaj4088/git/-ElectricityUsagePredictor6_20200918/" +
 		"drivers/geckodriver"
 		) ;
-	/*
-	 * /home/xxxxxx/git/ElectricityUsagePredictor5/drivers/geckodriver
-	 */
 	if (displayUseProxy)     useProxy(firefoxOptions) ;
 	if (!DEBUG_SHOW_BROWSER) firefoxOptions.setHeadless(true);
-	msg("Built " + this) ;
-//	new AssertionError("Built SMTDC, dumping call stack...")
-//	.printStackTrace() ;
+	if (DEBUG_SHOW_MESSAGES) msg("Built " + this) ;
     }
     
     @Override
@@ -271,7 +261,6 @@ SmartMeterTexasDataInterface
      */
     public static void main(String[] args) {
 	ElectricityUsagePredictor.main(null) ;
-	//	System.exit(0);
     }
 
     @Override
@@ -355,31 +344,31 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	}
 	if (result == JOptionPane.YES_OPTION) {
 	    f.setProxy((new Proxy()).setHttpProxy("localhost:8080")) ;
-//	    HostConfiguration hostConfiguration = 
-//		    h.getHostConfiguration() ;
-//	    hostConfiguration.setProxy("localhost", 8080)  ;
-//	    h.setHostConfiguration(hostConfiguration) ;
 	}
     }
 
 
     private WebDriver login() {
-	Context context = new Context() ;
+	Context context ; 
 	//
 	// There are lots of warnings and INFO messages... ignore them.
 	//
-	System.out.println(
+	if (DEBUG_SHOW_MESSAGES) System.out.println(
 		"Ignoring messages and going to the login page.") ;
 	context = saveContextAndHideMessages() ;
 	try {
 	    browser = new FirefoxDriver(firefoxOptions) ;
 	    browser.get("https://smartmetertexas.com");
-	    System.out.println("Went to the login page.") ;
+	    if (DEBUG_SHOW_MESSAGES) {
+		System.out.println("Went to the login page.") ;
+	    }
 	} finally {
 	    //
 	    // Done with ignoring warnings and INFO messages.  Restore...
 	    //
-	    System.out.println("Done ignoring messages.") ;
+	    if (DEBUG_SHOW_MESSAGES) {
+		System.out.println("Done ignoring messages.") ;
+	    }
 	    restoreContextAndUnhideMessages(context) ;
 	}
 	//
@@ -417,8 +406,10 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 
 	String u = (String) Info.PreferencesEnum.keyUserID.getStoredValue() ;
 	String p = (String) Info.PreferencesEnum.keyPassword.getStoredValue() ;
-	msg("User ID  is " + u + ".") ;
-	msg("Password is " + p + ".") ;
+	if (DEBUG_SHOW_MESSAGES) {
+	    msg("User ID  is " + u + ".") ;
+	    msg("Password is " + p + ".") ;
+	}
 	sendStringToWebElement(u, userid) ; 
 	sendStringToWebElement(p, password) ; 
 	WebElement button   = 
@@ -445,22 +436,6 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
     void getData(WebDriver wd) {
 	ValuesForDate values = null ;
 	getDataHelper(wd) ;
-	/*
-	 * 1 (deleted)
-	 * 2 Check if the cache can be used (synchronized on cachelock).
-	 * 3 Get the startRead, set dataValid to show data is valid,
-	 *   use the cached date as the date of this object and show
-	 *   that the date has been changed (synchronized on lock).
-	 * 4 Get the web page data for the start reading (as a float).
-	 * 5 If the cached values were not used (test synchronized on
-	 *   lock), then
-	 *   convert the start reading float to the int startRead
-	 *   and set dataValid to show data is valid (synchronized on
-	 *   lock).
-	 */
-	/*
-	 * getStartReadvalueForDate(WebDriver browser, String date)
-	 */
 	String dateString ;
 	    /*
 	     * vvvv    To get rid of a warning. vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -551,27 +526,24 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	    values = getAllValuesForDate(wd, dateWantedString) ;
 	}
 	float startReadFloat = Float.parseFloat(values.getStartRead()) ;
-	msg("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv") ;
-	msg("") ;
-	msg("Here is the data in ValuesForDate values:") ;
-	msg("") ;
-	msg("Date           is " + values.getDate()) ;
-	msg("Success status is " + values.isSuccess()) ;
-	msg("Consumption    is " + values.getConsumption()) ;
-	msg("Start reading  is " + values.getStartRead()) ;
-	msg("End   reading  is " + values.getEndRead()) ;
-	msg("") ;
-	msg("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^") ;
-	msg("") ;
+	if (DEBUG_SHOW_MESSAGES) {
+	    msg("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv") ;
+	    msg("") ;
+	    msg("Here is the data in ValuesForDate values:") ;
+	    msg("") ;
+	    msg("Date           is " + values.getDate()) ;
+	    msg("Success status is " + values.isSuccess()) ;
+	    msg("Consumption    is " + values.getConsumption()) ;
+	    msg("Start reading  is " + values.getStartRead()) ;
+	    msg("End   reading  is " + values.getEndRead()) ;
+	    msg("") ;
+	    msg("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^") ;
+	    msg("") ;
+	}
 	/*
 	 * ***********************************************************
 	 */
 
-//	    wpData = wp.indexOf(fromStringEndRead) ;
-//	    dataString = wp.subString(wpData, 
-//		    fromStringEndRead, 
-//		    toStringEndRead) ;
-//	    float endReadFloat = Float.parseFloat(dataString) ;
 	    synchronized (cacheLock) {
 		if (!cachedValuesUsed) {
 		    synchronized (lock) {
@@ -650,10 +622,6 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 		}
 	    } catch (org.openqa.selenium.StaleElementReferenceException e1) {
 		System.out.println(" Caught SER Exception on: " + we + ".") ;
-//		String s = e1.getMessage() ;
-//		if (s != null) {
-//		    System.out.println("Message is: " + s) ;
-//		}
 		e1.printStackTrace(System.out) ;
 		System.out.println() ;
 		return null ;
@@ -661,61 +629,6 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	}
 	return null ;
     }
-
-    /**
-     * @param browser
-     * @param date
-     */
-//    private static boolean scrapeData(WebDriver browser, String date) {
-//	boolean successful = false ;
-//	String result = "" ;
-//	List<WebElement> input = browser.findElements(By.xpath("//input")) ;
-//	for (WebElement e : input) sendStringToWebElement(date, e) ;
-//	List<WebElement> select = browser.findElements(By.xpath("//select")) ;
-//	for (WebElement e : select) e.sendKeys("D") ;
-//	
-//	//
-//	//  Results here.
-//	//
-//	
-//	String results[] = {"", "", "", "", ""} ;
-//	if (dataAvailable(browser)) {
-//	    for (int i = 0; i < DATA_RETRY_LIMIT; i++) {
-//		result = dataFound(browser);
-//		if (result != null) break;
-//		sleepMillis(DATA_RETRY_MILLIS);
-//	    } 
-//	}
-//	if (result == null) {
-//	    System.out.println();
-//	    System.out.println("Could not find data after " + 
-//		    DATA_RETRY_LIMIT + " tries and after " + 
-//		    (DATA_RETRY_LIMIT*DATA_RETRY_MILLIS) + 
-//		    " milliseconds for date: " + date + ".") ;
-//	    System.out.println();
-//	    System.exit(-1) ;
-//	}
-//	//
-//	// The next line eliminates a compiler warning.
-//	//
-//	if (result == null) result = "" ;
-//	//
-//	//
-//	//
-//	result = result.substring(result.lastIndexOf(SEARCH_FOR)) ;
-//	results = result.split("\\s");
-//	if ( results[1].contentEquals(date) ) successful = true ;
-//	if (successful) {
-//	    System.out.println();
-//	    System.out.println("Date        is " + results[1]);
-//	    System.out.println("Start Read  is " + results[2]);
-//	    System.out.println("End   Read  is " + results[3]);
-//	    System.out.println("Consumption is " + results[4]);
-//	    System.out.println();
-//	}
-//	for (WebElement e : select) e.sendKeys("E") ;
-//	return successful ; 
-//    }
 
     /**
      * @param browser
@@ -856,63 +769,15 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	final int lastReadings = endMeterReadValue ;
 	String[] readings = new String[lastReadings+1]  ;
 	for (int i = 0 ; i<readings.length ; i++ ) readings[i] = "" ;
-/*
-	WPLocation wpl =
-		wp.indexOf("Latest End of Day Read") ;
-	assertGoodLocation(wpl) ;
-	int line = wpl.getLine() ;
-	String endDate = wp.subString(
-		line+1, 
-		"<TD><SPAN name=\"ler_date\">", 
-		"</SPAN></TD>"
-		) ;
-	String endValue = wp.subString(
-		line+3, 
-		"<TD><SPAN name=\"ler_read\">", 
-		"</SPAN></TD>"
-		) ;
-	LocalDate startDate = getLatestStartDate(endDate) ;
-	long startReading = getLatestStartRead(endValue) ;
-	synchronized(cacheLock) {
-	    cachedDate         = startDate ;
-	    cachedMeterReading = startReading ;
-	    cachedValuesValid = true ;
-	}
-	*/
 	Runtime rt = new Runtime() ; // Gets start time.
-//	System.out.println();
-//	System.out.println("Finding...") ;
-//	System.out.println();
-//	List<WebElement> select = 
-//		wd.findElements(By.xpath("//div[@class='last-meter-reading']")) ;
 	WebElement select = 
 		wd.findElement(By.xpath("//div[@class='last-meter-reading']")) ;
-//	System.out.println("FOUND " + select.size() +
-//		" ELEMENTS:") ;
-//	System.out.println() ;
-//	for (WebElement w : select) {
-//	    System.out.println(">> with text:") ;
-//	    System.out.println("#") ;
-//	    String text = w.getText() ;
-//	    System.out.println(text) ;
-//	    System.out.println("#") ;
-//	    readings = text.split("\\R") ;
 	readings = select.getText().split("\\R") ;
-//	    for (String s : text.split("\\R")) {
-//		System.out.println("{"+ s + "}") ;
-//	    }
-	    /*
-	     {Latest End of Day Read}  
-	     {Date}  
-	     {07/25/2020}  
-	     {Time}  
-	     {00:00:00}  
-	     {Meter Read}  
-	     {41725.018} 
-	     */
-//	}
-	System.out.print("... done finding.  Took " + rt.measurement()/1000.0) ;
-	System.out.println(" seconds.") ;
+	if (DEBUG_SHOW_MESSAGES) {
+	    System.out.print(
+		    "... done finding.  Took " + rt.measurement()/1000.0) ;
+	    System.out.println(" seconds.") ;
+	}
 
 	if ( ! readings[titleLiteral].contains("Latest End of Day Read")) {
 	    throw new Error("Latest End of Day Read has wrong title of " + 
@@ -946,37 +811,11 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	    cachedMeterReading = startReading ;
 	    cachedValuesValid = true ;
 	}
-	System.out.println("Latest Start Date of " + startDate.toString() + 
-		" has reading of " + startReading + ".") ;
-	/*
-	List<WebElement> select = wd.findElements(By.xpath("//div")) ;
-	for (WebElement e : select) {
-	    if (e.getText().equals("Latest End of Day Read")) {
-		//WHAT TO DO ?
-//		LocalDate latestStartDate = getLatestStartDate(wd) ;
-//		long      latestStartReading = getLatestStartRead(wd) ;
-		System.out.println();
-		System.out.println("Found web element, with text " + 
-			e.getText()) ;
-		System.out.println() ;
-		List<WebElement> subElements = 
-			e.findElements(By.xpath("./descendant::div")) ;
-		System.out.println() ;
-		System.out.println("FOUND " + subElements.size() +
-			" ELEMENTS:") ;
-		System.out.println() ;
-		for (WebElement w : subElements) {
-		    System.out.println("  " + "with text " + w.getText()) ;
-		}
-		return ;
-	    }
+	if (DEBUG_SHOW_MESSAGES) {
+	    System.out.println("Latest Start Date of " + startDate.toString() + 
+		    " has reading of " + startReading + ".") ;
 	}
-	System.out.println() ;
-	System.out.println("Could not get latest end of day read !") ;
-	System.out.println() ;
-	System.out.println() ;
-	*/
-	}
+    }
 
     private LocalDate getLatestStartDate(String dateIn) {
 	final char FSLASH = '/' ;
@@ -1066,19 +905,15 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
     @Override
     public int getGreenStart() {
 	return 500 ; // Ian Shef ibs
-//	return accountInfo.getGreenStart() ;
     }
     
     @Override
     public int getGreenEnd() {
 	return 1000 ; //  Ian Shef  ibs
-//	return accountInfo.getGreenEnd() ;
     }
     
     static class AccountInfo {
 	private static final Info info = new Info() ;
-//	    greenStart = accountInfo.getGreenStart() ;
-//	    greenEnd   = accountInfo.getGreenEnd() ;
 	
 	public int getGreenStart() {
 	    return info.getGreenStart() ;
@@ -1089,84 +924,6 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	}
 
     }
-    
-//    static class AccountInfo {
-//	private String iD = "" ;
-//	private String password = "" ;
-//	private String greenStartString = "" ;
-//	private String greenEndString = "" ;
-//	private static final String charEncoding = "UTF-8" ;
-//	final URL url = this.getClass().getProtectionDomain().
-//		getCodeSource().getLocation() ;
-//	final String f1 = decode(url.getPath()) ;
-//	final String f2 = getClass().getSimpleName() + ".txt" ;
-//	final File f ;
-//
-//	AccountInfo() {
-//	    //
-//	    // Using Util.makeArrayList(0) eliminates a compiler warning.
-//	    //
-//	    List<String> list  = Util.makeArrayList(0) ;
-//	    
-//	    if (f1.endsWith("/")) {
-//		f = new File(f1 + f2) ;  // Needed for Linux.
-//	    } else {
-//		f = new File(f1 + "\\" + f2) ;  // Needed for Windows.
-//	    }
-//	    if (!f.exists()) {
-//		throw new AssertionError("File " +
-//			f + " is missing.") ;
-//	    }
-//	    if (!f.canRead()) {
-//		throw new AssertionError("File " +
-//			f + " is not readable.") ;
-//	    }
-//	    try {
-//		list = Files.readAllLines(f.toPath()) ;
-//	    } catch (IOException e) {
-//		e.printStackTrace();
-//		throw new AssertionError("File " +
-//			f + " cannot be read for unexpected reason.") ;
-//	    }
-//	    int listSize = list.size() ;
-//	    if (listSize<4) {
-//		throw new AssertionError("File " +
-//			f + " needs at least four lines, has only " + 
-//			listSize + ".") ;
-//	    }
-//	    iD = list.get(0).toUpperCase() ;
-//	    password = list.get(1) ;
-//	    greenStartString = list.get(2) ;
-//	    greenEndString = list.get(3) ;
-//	}
-//	
-//	private static String decode(String s) {
-//		String result ;
-//		try {
-//			result = URLDecoder.decode(s, charEncoding);
-//		} catch (UnsupportedEncodingException e) {
-//			result = s ;
-//		}
-//		return result ;
-//	}
-//	
-//	String getID() {
-//	    return iD ;
-//	}
-//	String getPassword() {
-//	    return password ;
-//	}
-//	int getGreenStart() {
-//	    return Integer.parseUnsignedInt(greenStartString) ;
-//	}
-//	int getGreenEnd() {
-//	    return Integer.parseUnsignedInt(greenEndString) ;
-//	}
-//	@Override
-//	public String toString() {
-//	    return "File used is " + f  ;
-//	}
-//    }
     
     private void waitForFirstPageAfterLogin() {
 	int tries = 1 ;
@@ -1295,8 +1052,6 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 		    return this ;
 		}
 		
-/*       1         2         3         4         5         6         7        */
-/*3456789012345678901234567890123456789012345678901234567890123456789012345678*/		
 		public ValuesForDate build() {
 		    return new ValuesForDate(this) ;
 		}
