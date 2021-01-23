@@ -3,9 +3,6 @@ package eup;
 import java.awt.Container;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -79,7 +76,9 @@ SmartMeterTexasDataInterface
     private final static String EMPTY = "" ;
     private static final DateTimeFormatter DATE_PATTERN = 
 	    DateTimeFormatter.ofPattern("MM'/'dd'/'yyyy") ;
-   
+    private final static String MAINTENANCE = 
+	    "Smart Meter Texas is currently undergoing maintenance." ;
+  
     WebDriver browser ;
     FirefoxOptions firefoxOptions = new FirefoxOptions() ;
 //    int tries = 1 ;
@@ -383,7 +382,37 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 	    System.out.println("Done ignoring messages.") ;
 	    restoreContextAndUnhideMessages(context) ;
 	}
-	WebElement userid   = browser.findElement(By.name("userid")) ;
+	//
+	// Initializing to null avoids an error message.
+	//
+	WebElement userid = null ;
+	
+	try {
+	    userid = browser.findElement(By.name("userid"));
+	} catch (org.openqa.selenium.NoSuchElementException e) {
+	    java.util.List<WebElement> maintenanceMessage = null;
+	    try {
+		maintenanceMessage = browser.findElements(
+		    By.partialLinkText(
+			    MAINTENANCE
+			    )
+		    );
+	    } catch (Exception e1) {
+		e1.printStackTrace() ;
+		System.exit(-6) ;
+	    }
+	    if ( (maintenanceMessage != null ) && 
+		    (maintenanceMessage.size() > 0 )) {
+		fb.log(EMPTY) ;
+		for (WebElement m : maintenanceMessage) {
+			fb.log(m) ;
+		}
+	    }
+	    fb.log(EMPTY) ;
+	    fb.log("TRY AGAIN LATER !") ;
+	    fb.log(EMPTY) ;
+	    System.exit(-5) ;
+	}
 	WebElement password = browser.findElement(By.name("password")) ;
 
 	String u = (String) Info.PreferencesEnum.keyUserID.getStoredValue() ;
@@ -1047,82 +1076,97 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
     }
     
     static class AccountInfo {
-	private String iD = "" ;
-	private String password = "" ;
-	private String greenStartString = "" ;
-	private String greenEndString = "" ;
-	private static final String charEncoding = "UTF-8" ;
-	final URL url = this.getClass().getProtectionDomain().
-		getCodeSource().getLocation() ;
-	final String f1 = decode(url.getPath()) ;
-	final String f2 = getClass().getSimpleName() + ".txt" ;
-	final File f ;
+	private static final Info info = new Info() ;
+//	    greenStart = accountInfo.getGreenStart() ;
+//	    greenEnd   = accountInfo.getGreenEnd() ;
+	
+	public int getGreenStart() {
+	    return info.getGreenStart() ;
+	}
+	
+	public int getGreenEnd() {
+	    return info.getGreenEnd() ;
+	}
 
-	AccountInfo() {
-	    //
-	    // Using Util.makeArrayList(0) eliminates a compiler warning.
-	    //
-	    List<String> list  = Util.makeArrayList(0) ;
-	    
-	    if (f1.endsWith("/")) {
-		f = new File(f1 + f2) ;  // Needed fo Linux.
-	    } else {
-		f = new File(f1 + "\\" + f2) ;  // Needed fo Windows.
-	    }
-	    if (!f.exists()) {
-		throw new AssertionError("File " +
-			f + " is missing.") ;
-	    }
-	    if (!f.canRead()) {
-		throw new AssertionError("File " +
-			f + " is not readable.") ;
-	    }
-	    try {
-		list = Files.readAllLines(f.toPath()) ;
-	    } catch (IOException e) {
-		e.printStackTrace();
-		throw new AssertionError("File " +
-			f + " cannot be read for unexpected reason.") ;
-	    }
-	    int listSize = list.size() ;
-	    if (listSize<4) {
-		throw new AssertionError("File " +
-			f + " needs at least four lines, has only " + 
-			listSize + ".") ;
-	    }
-	    iD = list.get(0).toUpperCase() ;
-	    password = list.get(1) ;
-	    greenStartString = list.get(2) ;
-	    greenEndString = list.get(3) ;
-	}
-	
-	private static String decode(String s) {
-		String result ;
-		try {
-			result = URLDecoder.decode(s, charEncoding);
-		} catch (UnsupportedEncodingException e) {
-			result = s ;
-		}
-		return result ;
-	}
-	
-	String getID() {
-	    return iD ;
-	}
-	String getPassword() {
-	    return password ;
-	}
-	int getGreenStart() {
-	    return Integer.parseUnsignedInt(greenStartString) ;
-	}
-	int getGreenEnd() {
-	    return Integer.parseUnsignedInt(greenEndString) ;
-	}
-	@Override
-	public String toString() {
-	    return "File used is " + f  ;
-	}
     }
+    
+//    static class AccountInfo {
+//	private String iD = "" ;
+//	private String password = "" ;
+//	private String greenStartString = "" ;
+//	private String greenEndString = "" ;
+//	private static final String charEncoding = "UTF-8" ;
+//	final URL url = this.getClass().getProtectionDomain().
+//		getCodeSource().getLocation() ;
+//	final String f1 = decode(url.getPath()) ;
+//	final String f2 = getClass().getSimpleName() + ".txt" ;
+//	final File f ;
+//
+//	AccountInfo() {
+//	    //
+//	    // Using Util.makeArrayList(0) eliminates a compiler warning.
+//	    //
+//	    List<String> list  = Util.makeArrayList(0) ;
+//	    
+//	    if (f1.endsWith("/")) {
+//		f = new File(f1 + f2) ;  // Needed for Linux.
+//	    } else {
+//		f = new File(f1 + "\\" + f2) ;  // Needed for Windows.
+//	    }
+//	    if (!f.exists()) {
+//		throw new AssertionError("File " +
+//			f + " is missing.") ;
+//	    }
+//	    if (!f.canRead()) {
+//		throw new AssertionError("File " +
+//			f + " is not readable.") ;
+//	    }
+//	    try {
+//		list = Files.readAllLines(f.toPath()) ;
+//	    } catch (IOException e) {
+//		e.printStackTrace();
+//		throw new AssertionError("File " +
+//			f + " cannot be read for unexpected reason.") ;
+//	    }
+//	    int listSize = list.size() ;
+//	    if (listSize<4) {
+//		throw new AssertionError("File " +
+//			f + " needs at least four lines, has only " + 
+//			listSize + ".") ;
+//	    }
+//	    iD = list.get(0).toUpperCase() ;
+//	    password = list.get(1) ;
+//	    greenStartString = list.get(2) ;
+//	    greenEndString = list.get(3) ;
+//	}
+//	
+//	private static String decode(String s) {
+//		String result ;
+//		try {
+//			result = URLDecoder.decode(s, charEncoding);
+//		} catch (UnsupportedEncodingException e) {
+//			result = s ;
+//		}
+//		return result ;
+//	}
+//	
+//	String getID() {
+//	    return iD ;
+//	}
+//	String getPassword() {
+//	    return password ;
+//	}
+//	int getGreenStart() {
+//	    return Integer.parseUnsignedInt(greenStartString) ;
+//	}
+//	int getGreenEnd() {
+//	    return Integer.parseUnsignedInt(greenEndString) ;
+//	}
+//	@Override
+//	public String toString() {
+//	    return "File used is " + f  ;
+//	}
+//    }
     
     private void waitForFirstPageAfterLogin() {
 	int tries = 1 ;

@@ -488,7 +488,7 @@ public class MakeAccountInfo {
 
 class Info {
     
-    enum PreferencesEnum{
+    public enum PreferencesEnum{
 	/*
 	 * Extend this by creating a variable name (e.g. keyXXX) and
 	 * a text description of the variable (e.g. YYY) and extend the
@@ -584,7 +584,7 @@ class Info {
 	abstract void   storeValue() ;
     }
 
-    Info() {
+    public Info() {
 	for (PreferencesEnum e : PreferencesEnum.values()) {
 	    e.setValue(e.getStoredValue()) ;
 //	    StringBuilder temp = 
@@ -593,6 +593,19 @@ class Info {
 //	    System.out.println(temp) ;
 	}
    }
+    
+    public int getGreenStart() {
+	return 
+		((Integer)PreferencesEnum.
+			keyGreenZoneStart.getValue()).intValue() ; 
+	}
+    
+    public int getGreenEnd() {
+	return
+		((Integer)PreferencesEnum.
+			keyGreenZoneEnd.getValue()).intValue() ;
+    }
+    
 	public static void main(String[] args) {
 	    new Info() ;
 		System.out.println(

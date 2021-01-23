@@ -10,6 +10,7 @@ import java.awt.Frame;
 import java.awt.GraphicsConfiguration;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.text.ParseException;
@@ -23,6 +24,7 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField.AbstractFormatter;
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -51,12 +53,14 @@ implements ActionListener {
      */
     private static final boolean disableOutRedirection = false;
     private static final boolean disableErrRedirection = false;
-    private static final boolean USE_CACHE = false ;
+    private static final boolean USE_PERSISTENT_STORAGE = true ;
     
-    private static final int startProgress1 = 10 ;
-    private static final int changeProgress = 10 ;
+    private static final int startProgress1 = 100 ;
+    private static final int changeProgress = 100 ;
     private static final int startProgress2 = 
-	    startProgress1 + 5 * changeProgress ;
+	    startProgress1 + 3 * changeProgress ;
+    private static final int startProgress3 = 
+	    startProgress1 + 7 * changeProgress ;
     private static final int EXTRA_BUTTON_SPACE = 10 ;
     
     private static final long serialVersionUID = 1L;
@@ -139,12 +143,32 @@ implements ActionListener {
     }
 
     private final void setupGUI() {
+	setTaskbarIcon("resources/Attempt3.gif");
 	addWidgets();
 	connectInternalListeners();
 	logJavaConfiguration();
-//	int height = (int)getSize().getHeight() ;
-//	int width  = (int)getSize().getWidth() ;
-//	setSize(width + 200, height) ;
+    }
+
+    /**
+     * @param iconFilepath Path and filename of icon, 
+     *                     such as "resources/icon.gif"
+     * 
+     */
+    private void setTaskbarIcon(String iconFilepath) {
+	//
+	// To set the icon displayed for the system when
+	// this program is running.
+	//
+	try{    
+	    setIconImage(ImageIO.read(new File(iconFilepath))) ;   
+	}
+	catch (Exception ex){
+	    ex.printStackTrace() ;
+	    System.exit(-26) ;
+	}
+	//
+	//
+	//
     }
 
     private void logJavaConfiguration() {
@@ -406,8 +430,15 @@ implements ActionListener {
      * Must be called while executing on Event Dispatch Thread (EDT).
      */
     private void connectInternalListeners() {
-	fb.log("GUI controller setup commencing.", Feedbacker.TO_FILE);
-	fb.log("GUI controller setup completed.", Feedbacker.TO_FILE);
+	fb.log("GUI controller setup commencing.", Feedbacker.TO_FILE) ;
+	if (USE_PERSISTENT_STORAGE) {
+	    fb.log("Attempting to use persistent storage.", 
+		    Feedbacker.TO_FILE) ;
+	} else {
+	    fb.log("Not using persistent storage.", 
+		    Feedbacker.TO_FILE + Feedbacker.TO_GUI) ;
+	}
+	fb.log("GUI controller setup completed.", Feedbacker.TO_FILE) ;
     }
 
     @Override
@@ -457,7 +488,8 @@ implements ActionListener {
 	    // Now allow the main thread to exit.
 	} catch (InvocationTargetException e) {
 	    e.printStackTrace();
-	    // Now allow the main thread to exit.
+	    // Now cause the main thread to exit.
+	    System.exit(-27) ;
 	}
 	while (true) {
 	    ElectricityUsagePredictor gui = guiAtomicReference.get() ;
@@ -532,7 +564,7 @@ implements ActionListener {
 	    /*
 	     *  Store current billing date for future use.
 	     */
-	    writeToCache(
+	    writeToPersistentStorage(
 		    gui.settingsMap, 
 		    Setting.MOST_RECENT_BILL_DATE_YEAR, 
 		    Setting.MOST_RECENT_BILL_DATE_MONTH, 
@@ -548,7 +580,7 @@ implements ActionListener {
 	    /*
 	     *  Store next billing date for future use.
 	     */
-	    writeToCache(
+	    writeToPersistentStorage(
 		    gui.settingsMap, 
 		    Setting.NEXT_BILL_DATE_YEAR, 
 		    Setting.NEXT_BILL_DATE_MONTH, 
@@ -569,7 +601,12 @@ implements ActionListener {
 	    LocalDate currentBillDateUsed ;
 	    SmartMeterTexasDataInterface gdcBDLD = null ;
 	    boolean usedMostRecentBillReadingCache = false ;
-	    if (canUseCachedValue(
+	    gui.fb.activityAnnounce(
+		    startProgress2, 
+		    "Getting data for most recent billing date.", 
+		    startProgress2+changeProgress
+		    ) ;
+	    if (canUsePersistentStorageValue(
 		    gui.settingsMap,
 		    Setting.MOST_RECENT_BILL_DATE_YEAR,
 		    Setting.MOST_RECENT_BILL_DATE_MONTH,
@@ -596,7 +633,11 @@ implements ActionListener {
 			    .build();
 		    gdcBDLD.setFeedbacker(gui.fb) ;
 		    currentBillMeterReading = gdcBDLD.getStartRead();
-			writeToCache(
+		    //
+		    // Write data for current billing date to
+		    // persistent storage.
+		    //
+			writeToPersistentStorage(
 				gui.settingsMap, 
 				Setting.MOST_RECENT_BILL_DATE_YEAR,
 				Setting.MOST_RECENT_BILL_DATE_MONTH,
@@ -630,7 +671,12 @@ implements ActionListener {
 	    LocalDate currentDateUsed ;
 	    SmartMeterTexasDataInterface gdcDLD = null;
 	    boolean usedCurrentDateReadingCache = false ;
-	    if (canUseCachedValue(
+	    gui.fb.activityAnnounce(
+		    startProgress3, 
+		    "Getting data for current date.", 
+		    startProgress3+changeProgress
+		    ) ;
+	    if (canUsePersistentStorageValue(
 		    gui.settingsMap,
 		    Setting.CURRENT_DATE_YEAR,
 		    Setting.CURRENT_DATE_MONTH,
@@ -658,7 +704,11 @@ implements ActionListener {
 		gdcDLD.setFeedbacker(gui.fb) ;
 		currentMeterReading     = 
 			gdcDLD.getStartRead() ;
-		writeToCache(
+		    //
+		    // Write data for current date to
+		    // persistent storage.
+		    //
+		writeToPersistentStorage(
 			gui.settingsMap, 
 			Setting.CURRENT_DATE_YEAR,
 			Setting.CURRENT_DATE_MONTH,
@@ -922,10 +972,26 @@ implements ActionListener {
      * @param storedNameYear
      * @param storedNameMonth
      * @param storedNameDay
+     * @param storedNameValidity
      * @param lD
-     * @return
+     * @return boolean true if the Map given by parameter settingsMap2 has a
+     *                      Setting whose name is given by the parameter
+     *                      storedNameValidity and whose value is given by
+     *                      Setting.VALID (currently "Valid") AND
+     *                      whose year is in a setting named by the
+     *                      parameter storedNameYear and whose value is the
+     *                      same as the year of parameter lD, AND
+     *                      whose month is in a setting named by the
+     *                      parameter storedNameMonth and whose value is the
+     *                      same as the month of parameter lD, AND
+     *                      whose day is in a setting named by the
+     *                      parameter storedNameDay and whose value is the
+     *                      same as the day of parameter lD .
+     *                      Basically, return true if the stored setting is
+     *                      valid and there is a match to the date...
+     *                      otherwise return false.
      */
-    private static boolean canUseCachedValue(
+    private static boolean canUsePersistentStorageValue(
 	    final Map<? extends String, ? extends Setting> settingsMap2,
 	    final String storedNameYear,
 	    final String storedNameMonth,
@@ -939,7 +1005,7 @@ implements ActionListener {
 	String lDMonth = String.valueOf(lD.getMonthValue()) ;
 	String lDDay = String.valueOf(lD.getDayOfMonth()) ;
 	
-	if (!USE_CACHE) return false ;
+	if (!USE_PERSISTENT_STORAGE) return false ;
 	if (storedNameValidity == null) {
 	    valid = false ;
 	} else {
@@ -979,9 +1045,22 @@ implements ActionListener {
      * @param storedNameYear
      * @param storedNameMonth
      * @param storedNameDay
+     * @param storedNameReading
+     * @param storedNameValidity
      * @param lD
+     * 
+     * If this item 
+     * (date given by parameter lD,
+     *  names given by parameters
+     *  storedNameYear, storedNameMonth, storedNameDay, and storedNameValidity)
+     * is not already in the Map given by the parameter
+     * settingsMap2, then store it, storing the parts of lD using the
+     * names given by parameters
+     * storedNameYear, storedNameMonth, and storedNameDay,
+     * and store the reading as being invalid
+     * (using storedNameValidity and a reading of -1).
      */
-    private static void writeToCache(
+    private static void writeToPersistentStorage(
 	    final Map<? extends String, ? extends Setting> settingsMap2,
 	    final String storedNameYear, 
 	    final String storedNameMonth,
@@ -994,7 +1073,7 @@ implements ActionListener {
 	String lDMonth = String.valueOf(lD.getMonthValue()) ;
 	String lDDay = String.valueOf(lD.getDayOfMonth()) ;
 	
-	if (canUseCachedValue(
+	if (canUsePersistentStorageValue(
 		settingsMap2, 
 		storedNameYear, 
 		storedNameMonth, 

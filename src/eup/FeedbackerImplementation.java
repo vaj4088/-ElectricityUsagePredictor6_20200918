@@ -75,8 +75,8 @@ public class FeedbackerImplementation implements Feedbacker {
 
     private static final ScheduledExecutorService scheduler =
 	    Executors.newScheduledThreadPool(1);
-    private static final int numActivityFrames   =  10 ;
-    private static final int activityFrameMillis =  80 ;
+    private static final int numActivityFrames   =    32 ;
+    private static final int activityFrameMillis =   100 ;
     int activityFrame;
     private static ScheduledFuture<?> activityHandle ;
 
@@ -94,8 +94,9 @@ public class FeedbackerImplementation implements Feedbacker {
 	    ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
 	    ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-    JProgressBar progressText = new JProgressBar(0, 100);
-    JProgressBar progress = new JProgressBar(0, 100);
+    JProgressBar progressText = new JProgressBar(0, 1000) ;
+//    JProgressBar progress = new JProgressBar(0, 1000) ;
+    ProgressBarLimited progress = new ProgressBarLimited(0, 1000) ;
 
     @Override
     public JComponent getProgressBar(Color color) {
@@ -269,7 +270,7 @@ public class FeedbackerImplementation implements Feedbacker {
     }
 
     @Override
-    public void progressAnnounce(final int percent, final String info) {
+    public void progressAnnounce(final float perThousand, final String info) {
 	SwingUtilities.invokeLater(new Runnable() {
 	    @Override
 	    public void run() {
@@ -277,7 +278,9 @@ public class FeedbackerImplementation implements Feedbacker {
 		if ((null == info) || (info.isEmpty()))
 		    processedInfo = " ";
 		progress.setIndeterminate(false);
-		progress.setValue(percent);
+		int perThousandInt = (int)(perThousand+0.5F) ;
+//		System.out.println("perThousandInt="+perThousandInt) ;
+		progress.setValue(perThousandInt);
 		progressText.setString(processedInfo);
 	    }
 	});
@@ -285,22 +288,25 @@ public class FeedbackerImplementation implements Feedbacker {
     
     @Override
     public void activityAnnounce(
-	    final int currentPercent, 
+	    final int minPerThousand, 
 	    final String info, 
-	    final int maxPercent
+	    final int maxPerThousand
 	    ) {
 	final Runnable activity = new Runnable() {
 	    @Override
 	    public void run() {
-		int bar = currentPercent + 
+		float bar = minPerThousand + 
 			((activityFrame++) * 
-				(maxPercent-currentPercent))/numActivityFrames ;
-		if (bar <   0) bar =   0 ;
-		if (bar > 100) bar = 100 ;
+				(((float)maxPerThousand-
+					(float)minPerThousand)/
+					numActivityFrames)) ;
+		if (bar <    0.0F) bar =    0.0F ;
+		if (bar > 1000.0F) bar = 1000.0F ;
 		if (activityFrame >= numActivityFrames) activityFrame = 0 ;
 		progressAnnounce(bar, info) ;
 		}
 	};
+	
 	if (activityHandle != null) {
 	    activityHandle.cancel(true) ;
 	}
@@ -343,7 +349,8 @@ public class FeedbackerImplementation implements Feedbacker {
 	    public void run() {
 		final int where = Feedbacker.TO_GUI + Feedbacker.TO_FILE
 			+ Feedbacker.TO_OUT;
-		FeedbackerImplementation fb = new FeedbackerImplementation();
+		FeedbackerImplementation fb = 
+			new FeedbackerImplementation();
 		JFrame frame = new JFrame(fb.toString());
 		frame.getContentPane().add(fb.getOperationsLog());
 		fb.log("Test Line 1", where);
