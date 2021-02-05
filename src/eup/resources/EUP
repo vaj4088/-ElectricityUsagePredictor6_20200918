@@ -1,0 +1,14 @@
+#!/bin/bash
+##
+JAR=/home/vaj4088/Desktop/ElectricityUsagePredictor_20210205.jar
+RESOURCEPATH=eup/resources
+
+zenity --notification --timeout=60 --text='The Electricity Usage Predictor is coming.'&
+if [ ! -f $RESOURCEPATH/geckodriver  ]; then jar --extract --file=$JAR $RESOURCEPATH/geckodriver  ; chmod u+x $RESOURCEPATH/geckodriver ; fi
+if [ ! -f $RESOURCEPATH/Attempt3.gif ]; then jar --extract --file=$JAR $RESOURCEPATH/Attempt3.gif ; fi
+
+java -splash:$RESOURCEPATH/Attempt3.gif -Dwebdriver.gecko.driver=$RESOURCEPATH/geckodriver -jar $JAR
+#
+# exec java -jar /home/vaj4088/Desktop/ElectricityUsagePredictor_20210129.jar
+#
+#

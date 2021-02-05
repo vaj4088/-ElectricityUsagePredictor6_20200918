@@ -8,11 +8,14 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.GraphicsConfiguration;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -21,10 +24,10 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import javax.swing.Box;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField.AbstractFormatter;
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -144,10 +147,10 @@ implements ActionListener {
     }
 
     private final void setupGUI() {
-	setTaskbarIcon("resources/Attempt3.gif");
-	addWidgets();
-	connectInternalListeners();
-	logJavaConfiguration();
+	setTaskbarIcon("resources/Attempt3.gif") ;
+	addWidgets() ;
+	connectInternalListeners() ;
+	logJavaConfiguration() ;
     }
 
     /**
@@ -160,16 +163,61 @@ implements ActionListener {
 	// To set the icon displayed for the system when
 	// this program is running.
 	//
+	// Try two different ways.
+	//
+	if (DEBUG_SHOW_MESSAGES) {
+	    File file = new File(".") ;
+	    System.out.println("========================================") ;
+	    System.out.println(
+		    "Currently at " + file.toString()) ;
+	    System.out.println(
+		    "getClass().getResource(" + iconFilepath + 
+		    ") returns " + getClass().getResource(iconFilepath)) ;
+	    System.out.println("getAbsolutePath() returns " + 
+		    file.getAbsolutePath()) ;
+	    try {
+		System.out.println("getCanonicalPath() returns " + 
+			file.getCanonicalPath()) ;
+	    } catch (IOException e) {
+		e.printStackTrace();
+	    }
+	    System.out.println("getName() returns " + file.getName()) ;
+	    System.out.println("getParent() returns " + file.getParent()) ;
+	    System.out.println("getPath() returns " + file.getPath()) ;
+	    System.out.println("========================================") ;
+	}
+	//	try{ 
+	//	 // ImageIcon, like many others, can receive an URL as argument,
+	//	 // which is a better approach to load resources that are
+	//	 // contained in the classpath
+	//	    URL url = getClass().getResource("/" + iconFilepath);
+	//	    Image image = new ImageIcon(url).getImage();
+	//	    setIconImage(image) ;
+	//	    succeeded = true ;
+	//	}
+	//	catch (Exception ex){ /* Do nothing yet. */ 
+	////	    if (DEBUG_SHOW_MESSAGES) {
+	//	    if (true) {
+	//		System.out.println("Failed for /" + iconFilepath) ;
+	//	    }
+	//	}
+
 	try{    
-	    setIconImage(ImageIO.read(new File(iconFilepath))) ;   
+	    // ImageIcon, like many others, can receive an URL as argument,
+	    // which is a better approach to load resources that are
+	    // contained in the classpath
+	    URL url = getClass().getResource(iconFilepath);
+	    Image image = new ImageIcon(url).getImage();
+	    setIconImage(image) ;
 	}
 	catch (Exception ex){
+	    //		    if (DEBUG_SHOW_MESSAGES) {
+	    if (true) {
+		System.out.println("Failed from " + iconFilepath) ;
+	    }
 	    ex.printStackTrace() ;
 	    System.exit(-26) ;
 	}
-	//
-	//
-	//
     }
 
     private void logJavaConfiguration() {
@@ -435,7 +483,7 @@ implements ActionListener {
 	if (DEBUG_SHOW_MESSAGES) {
 	    fb.log("Attempting to show debug messages.", Feedbacker.TO_FILE) ;
 	} else {
-	    fb.log("Not showing dbug messages.", Feedbacker.TO_FILE) ;
+	    fb.log("Not showing debug messages.", Feedbacker.TO_FILE) ;
 	}
 	if (USE_PERSISTENT_STORAGE) {
 	    fb.log("Attempting to use persistent storage.", 

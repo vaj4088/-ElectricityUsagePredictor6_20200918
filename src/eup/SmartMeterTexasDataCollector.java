@@ -77,8 +77,9 @@ SmartMeterTexasDataInterface
     private final static String EMPTY = "" ;
     private static final DateTimeFormatter DATE_PATTERN = 
 	    DateTimeFormatter.ofPattern("MM'/'dd'/'yyyy") ;
-    private final static String MAINTENANCE = 
+    private static final String MAINTENANCE = 
 	    "Smart Meter Texas is currently undergoing maintenance." ;
+    private static final String WEBDRIVER = "eup/resources/geckodriver" ;
   
     WebDriver browser ;
     FirefoxOptions firefoxOptions = new FirefoxOptions() ;
@@ -172,14 +173,32 @@ SmartMeterTexasDataInterface
 	this.progressDelta = builder.progressDelta ;
 	this.progressLabel = builder.progressLabel ;
 	progress = progressStart ;
-	System.setProperty(
-		"webdriver.gecko.driver", 
-		"/home/vaj4088/git/-ElectricityUsagePredictor6_20200918/" +
-		"drivers/geckodriver"
-		) ;
+//	System.setProperty(
+//		"webdriver.gecko.driver", 
+//		"/home/vaj4088/git/-ElectricityUsagePredictor6_20200918/" +
+//		"drivers/geckodriver"
+//		) ;
+//	System.setProperty(
+//		"webdriver.gecko.driver", WEBDRIVER
+//		) ;
 	if (displayUseProxy)     useProxy(firefoxOptions) ;
 	if (!DEBUG_SHOW_BROWSER) firefoxOptions.setHeadless(true);
 	if (DEBUG_SHOW_MESSAGES) msg("Built " + this) ;
+	if ( !findGeckoDriver() ) {
+	    sleepMillis(10000) ;
+	    System.exit(-30) ;
+	}
+    }
+
+    private boolean findGeckoDriver() {
+	boolean result = true ;
+	File gecko = new File(WEBDRIVER) ;
+	
+	if (!gecko.exists() || !gecko.isFile()) {
+	    System.err.println("COULD NOT FIND EXPECTED FILE: " + WEBDRIVER) ;
+	    result = false ;
+	}
+	return result ;
     }
     
     @Override
