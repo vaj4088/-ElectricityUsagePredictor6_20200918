@@ -178,9 +178,9 @@ SmartMeterTexasDataInterface
 //		"/home/vaj4088/git/-ElectricityUsagePredictor6_20200918/" +
 //		"drivers/geckodriver"
 //		) ;
-//	System.setProperty(
-//		"webdriver.gecko.driver", WEBDRIVER
-//		) ;
+	System.setProperty(
+		"webdriver.gecko.driver", WEBDRIVER
+		) ;
 	if (displayUseProxy)     useProxy(firefoxOptions) ;
 	if (!DEBUG_SHOW_BROWSER) firefoxOptions.setHeadless(true);
 	if (DEBUG_SHOW_MESSAGES) msg("Built " + this) ;
@@ -197,6 +197,8 @@ SmartMeterTexasDataInterface
 	if (!gecko.exists() || !gecko.isFile()) {
 	    System.err.println("COULD NOT FIND EXPECTED FILE: " + WEBDRIVER) ;
 	    result = false ;
+	    System.out.println("in directory " +
+	    (new File("~")).getAbsolutePath() ) ;
 	}
 	return result ;
     }
@@ -970,6 +972,8 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 		    if (correctTitleTimesInARow == 3) break ;
 		} else {
 		    correctTitleTimesInARow = 0 ;
+//		    System.out.println("Title is: '" +
+//		    browser.getTitle() + "'") ;
 		}
 		sleepMillis(1000) ;
 	    }
