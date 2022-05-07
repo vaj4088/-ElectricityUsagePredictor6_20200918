@@ -65,7 +65,7 @@ SmartMeterTexasDataInterface
     
 //    private final AccountInfo accountInfo = new AccountInfo() ;
 
-    private static final boolean DEBUG_SHOW_MESSAGES = false ;
+    private static final boolean DEBUG_SHOW_MESSAGES = true ; // ibs20220507
     private static final boolean DEBUG_SHOW_BROWSER = false ;
     private static final int RETRY_LIMIT = 5 ;
     private static final int DATA_RETRY_LIMIT = 5 ;
@@ -972,13 +972,15 @@ execute the FutureTask...  Eric Lindauer Nov 20 '12 at 6:08
 		    if (correctTitleTimesInARow == 3) break ;
 		} else {
 		    correctTitleTimesInARow = 0 ;
-//		    System.out.println("Title is: '" +
-//		    browser.getTitle() + "'") ;
+		    System.out.println("Title is: '" +
+		    browser.getTitle() + "'") ;
 		}
 		sleepMillis(1000) ;
 	    }
 	    if (titleTriesRemaining == 0) {
-		System.out.println("Failed to get title.") ;
+		System.out.print("Failed to get title ") ;
+		System.out.print(TITLE) ;
+		System.out.println(" .") ;
 		browser.quit() ;
 	    } else {
 		getData(browser) ;
