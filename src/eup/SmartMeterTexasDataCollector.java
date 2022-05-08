@@ -65,7 +65,7 @@ SmartMeterTexasDataInterface
     
 //    private final AccountInfo accountInfo = new AccountInfo() ;
 
-    private static final boolean DEBUG_SHOW_MESSAGES = true ; // ibs20220507
+    private static final boolean DEBUG_SHOW_MESSAGES = false ;
     private static final boolean DEBUG_SHOW_BROWSER = false ;
     private static final int RETRY_LIMIT = 5 ;
     private static final int DATA_RETRY_LIMIT = 5 ;
